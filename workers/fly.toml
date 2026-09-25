@@ -1,0 +1,10 @@
+# fly launch --no-deploy && fly secrets set DATABASE_URL=... && fly deploy
+app = "propsedge-live"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

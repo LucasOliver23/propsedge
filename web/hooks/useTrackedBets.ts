@@ -1,0 +1,75 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase/client";
+import { rpcErrorMessage } from "@/lib/constants";
+import type { Profile, Side, TrackedBet } from "@/lib/types";
+
+/** Usuário, bankroll e bilheteira — com Realtime em tracked_bets (Green/Red chega sozinho). */
+export function useTrackedBets() {
+  const supabase = getSupabase();
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [bets, setBets] = useState<TrackedBet[]>([]);
+  const [ready, setReady] = useState(false);
+
+  const load = useCallback(async (uid: string) => {
+    const [p, b] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", uid).single(),
+      supabase.from("v_my_bets").select("*").order("created_at", { ascending: false }).limit(500),
+    ]);
+    if (p.data) setProfile(p.data as Profile);
+    if (b.data) setBets(b.data as TrackedBet[]);
+  }, [supabase]);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!active) return;
+      setUser(data.user);
+      if (data.user) await load(data.user.id);
+      setReady(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) load(session.user.id);
+      else { setProfile(null); setBets([]); }
+    });
+    return () => { active = false; sub.subscription.unsubscribe(); };
+  }, [supabase, load]);
+
+  // Realtime: RLS garante que só chegam as apostas do próprio usuário
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`bets-${user.id}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "tracked_bets", filter: `user_id=eq.${user.id}` },
+        () => load(user.id))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [supabase, user, load]);
+
+  /** chave `${market_id}:${side}` das apostas abertas — para marcar o botão "fixado" */
+  const pinned = useMemo(
+    () => new Set(bets.filter((b) => b.status === "pending" || b.status === "live").map((b) => `${b.market_id}:${b.side}`)),
+    [bets],
+  );
+
+  const track = useCallback(async (marketId: number, side: Side, stake?: number, book?: string) => {
+    const { error } = await supabase.rpc("track_prop", {
+      p_market_id: marketId, p_side: side, p_stake: stake ?? null, p_bookmaker: book ?? null,
+    });
+    if (error) throw new Error(rpcErrorMessage(error.message));
+    if (user) await load(user.id);
+  }, [supabase, user, load]);
+
+  const untrack = useCallback(async (betId: string) => {
+    const { error } = await supabase.rpc("untrack_bet", { p_bet_id: betId });
+    if (error) throw new Error(rpcErrorMessage(error.message));
+    if (user) await load(user.id);
+  }, [supabase, user, load]);
+
+  return { user, profile, bets, pinned, ready, track, untrack };
+}
