@@ -1,0 +1,23 @@
+name: teste-fontes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  teste:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Testar fontes de dados
+        run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
+          t() { printf "%-45s -> " "$1"; curl -s -o /dev/null -w "%{http_code}\n" -m 15 -A "$UA" -H "Accept: application/json" -H "Referer: https://www.espn.com/" "$2"; }
+          t "ESPN site.api (navegador) MLB"   "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard"
+          t "ESPN site.web.api MLB"           "https://site.web.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard"
+          t "ESPN site.web.api NFL"           "https://site.web.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+          t "ESPN site.web.api Brasileirao"   "https://site.web.api.espn.com/apis/site/v2/sports/soccer/bra.1/scoreboard"
+          t "ESPN core API NFL"               "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events"
+          t "MLB oficial (statsapi)"          "https://statsapi.mlb.com/api/v1/schedule?sportId=1"
+          t "NHL oficial"                     "https://api-web.nhle.com/v1/schedule/now"
+          t "NBA oficial (cdn)"               "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json"
+          t "WNBA oficial (cdn)"              "https://cdn.wnba.com/static/json/liveData/scoreboard/todaysScoreboard_10.json"
+          t "ESPN sem navegador (atual)"      "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard"
