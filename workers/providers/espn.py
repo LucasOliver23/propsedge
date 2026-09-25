@@ -14,7 +14,7 @@ import httpx
 from config import COMBOS, SPORTS
 from providers.base import NBoxScore, NGame, NPlayerLine
 
-BASE = "https://site.api.espn.com/apis/site/v2/sports"
+BASE = "https://site.web.api.espn.com/apis/site/v2/sports"
 
 # (grupo, chave ESPN) ou chave ESPN -> chave canônica (stat_types.key)
 KEY_MAP: dict[str, dict] = {
@@ -66,7 +66,7 @@ class ESPNProvider:
     ext_key = "espn"
 
     def __init__(self) -> None:
-        self.http = httpx.Client(timeout=20, headers={"User-Agent": "PropsEdge/1.0"})
+                self.http = httpx.Client(timeout=20, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36", "Referer": "https://www.espn.com/"})
 
     # ------------------------------------------------------------------ agenda
     def _parse_event(self, sport_id: str, ev: dict, path: str) -> NGame:
