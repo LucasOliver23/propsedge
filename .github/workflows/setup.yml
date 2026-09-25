@@ -17,6 +17,9 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+        defaults:
+      run:
+        working-directory: propsedge
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
@@ -38,7 +41,7 @@ jobs:
       - name: 1. Migrations do banco
         run: bash scripts/migrate.sh
       - name: 2. Histórico + agenda + DvP + odds + análise
-        working-directory: workers
+        working-directory: propsedge/workers
         run: |
           SPORTS="${{ inputs.sports }}"
           python run.py setup --days "${{ inputs.days }}" ${SPORTS:+--sports "$SPORTS"}
