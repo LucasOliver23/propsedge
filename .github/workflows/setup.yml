@@ -4,56 +4,64 @@ on:
   workflow_dispatch:
     inputs:
       days:
-        description: "Dias de histórico para carregar"
+        description: "Dias de histórico"
         default: "30"
       sports:
-        description: "Esportes (vírgula) — vazio = todos"
+        description: "Esportes (vazio = todos)"
         default: ""
       admin_email:
-        description: "Seu e-mail de login (vira plano Elite)"
+        description: "Seu e-mail de login (vira Elite)"
         default: ""
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-        defaults:
-      run:
-        working-directory: propsedge
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
       PANDASCORE_TOKEN: ${{ secrets.PANDASCORE_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Dependências
+
+      - name: Localizar pasta do projeto
         run: |
+          if [ -d propsedge/workers ]; then echo "ROOT=propsedge" >> "$GITHUB_ENV"; else echo "ROOT=." >> "$GITHUB_ENV"; fi
+          ls -la
+
+      - name: Dependencias
+        run: |
+          cd "$ROOT"
           pip install -r workers/requirements.txt
           which psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+
       - name: Conferir segredos
         run: |
-          test -n "$DATABASE_URL" || (echo "::error::Secret DATABASE_URL não configurado" && exit 1)
-          test -n "$ODDS_API_KEY" || echo "::warning::ODDS_API_KEY vazio"
-          psql "$DATABASE_URL" -X -tAc "select 'conexão OK: ' || version()"
-      - name: 1. Migrations do banco
-        run: bash scripts/migrate.sh
-      - name: 2. Histórico + agenda + DvP + odds + análise
-        working-directory: propsedge/workers
+          test -n "$DATABASE_URL" || (echo "::error::Secret DATABASE_URL nao configurado" && exit 1)
+          psql "$DATABASE_URL" -X -tAc "select 'conexao OK'"
+
+      - name: 1. Migrations
         run: |
+          cd "$ROOT"
+          bash scripts/migrate.sh
+
+      - name: 2. Carga de dados
+        run: |
+          cd "$ROOT/workers"
           SPORTS="${{ inputs.sports }}"
           python run.py setup --days "${{ inputs.days }}" ${SPORTS:+--sports "$SPORTS"}
+
       - name: 3. Promover admin
         if: ${{ inputs.admin_email != '' }}
         run: |
-          psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -v email="${{ inputs.admin_email }}" <<'SQL'
-          update profiles set plan = 'elite'
-          where id = (select id from auth.users where lower(email) = lower(:'email'));
-          select case when exists (select 1 from auth.users where lower(email) = lower(:'email'))
-                      then 'admin promovido' else 'AVISO: faça login no site primeiro e rode de novo' end;
-          SQL
-      - name: 4. Diagnóstico
+          psql "$DATABASE_URL" -X -c "update profiles set plan = 'elite' where id = (select id from auth.users where lower(email) = lower('${{ inputs.admin_email }}'));"
+
+      - name: 4. Diagnostico
         if: always()
-        run: psql "$DATABASE_URL" -X -f scripts/diagnose.sql
+        run: |
+          cd "$ROOT"
+          psql "$DATABASE_URL" -X -f scripts/diagnose.sql
