@@ -1,0 +1,47 @@
+name: ingest
+
+on:
+  schedule:
+    - cron: "7 */3 * * *"
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "schedule | tick | backfill | dvp"
+        default: tick
+
+concurrency:
+  group: ingest-${{ github.event.schedule || inputs.job }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    defaults:
+      run:
+        working-directory: workers
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      PANDASCORE_TOKEN: ${{ secrets.PANDASCORE_TOKEN }}
+      ODDS_REGIONS: ${{ vars.ODDS_REGIONS || 'us' }}
+      ODDS_MAX_EVENTS_PER_RUN: ${{ vars.ODDS_MAX_EVENTS_PER_RUN || '10' }}
+      ODDS_MAX_MARKETS: ${{ vars.ODDS_MAX_MARKETS || '3' }}
+      ODDS_REFRESH_MINUTES: ${{ vars.ODDS_REFRESH_MINUTES || '180' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Executar
+        run: |
+          case "${{ github.event.schedule }}" in
+            "7 */3 * * *")  python run.py schedule ;;
+            "*/15 * * * *") python run.py boxscores && python run.py pipeline ;;
+            *) case "${{ inputs.job }}" in
+                 tick) python run.py boxscores && python run.py pipeline ;;
+                 *)    python run.py "${{ inputs.job }}" ;;
+               esac ;;
+          esac
