@@ -59,6 +59,18 @@ def ewma(vals: Sequence[float], hl: float = 5.0) -> float:
     return sum(v * x for v, x in zip(vals, w)) / sum(w)
 
 
+def book_line(proj: float, sd: float) -> float:
+    """Linha "de casa": o x.5 em que Mais e Menos ficam mais perto de 50/50 (odds ~1.85 dos dois lados)."""
+    best, best_gap = 0.5, 9.0
+    top = int(max(proj * 2, proj + 4 * max(sd, 1.0))) + 2
+    for k in range(0, top):
+        line = k + 0.5
+        gap = abs(proj_prob(proj, sd, line, "over") - 0.5)
+        if gap < best_gap:
+            best, best_gap = line, gap
+    return best
+
+
 def default_line(proj: float) -> float:
     base = math.floor(proj)
     line = base + 0.5 if proj - base >= 0.5 else base - 0.5

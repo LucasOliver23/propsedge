@@ -15,10 +15,10 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 from db import connect
-from engine.team_score import default_line, ewma, grade, rate, score, stdev
+from engine.team_score import book_line, ewma, grade, rate, score, stdev
 from jobs.common import log
 
-PICK_MIN_SCORE = 70
+PICK_MIN_SCORE = 65
 MIN_GAMES = 5
 
 GAMES_SQL = """
@@ -115,7 +115,7 @@ def _analyse(series: dict, projection: float | None, factor: float | None) -> di
     if len(l20) < MIN_GAMES or projection is None:
         return None
     sd = stdev(l20)
-    line = default_line(projection)
+    line = book_line(projection, sd)   # linha realista (~odd 1.85), não a "fácil"
     vals = {"l20": l20, "h2h": [x["v"] for x in series["h2h"]], "venue": [x["v"] for x in series["venue"]],
             "season": series["season"]}
     best = None
@@ -177,7 +177,7 @@ def run() -> None:
                         continue
                     base = ewma(vals[:10])
                     proj = 0.6 * base + 0.4 * allowed if allowed is not None else base
-                    factor = (allowed / lavg) if (allowed is not None and lavg) else None
+                    factor = min(max(allowed / lavg, 0.2), 5.0) if (allowed is not None and lavg) else None
                     res = _analyse(s, proj, factor)
                     subjects.append((proj, factor))
                     if res:

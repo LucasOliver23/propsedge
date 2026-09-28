@@ -130,6 +130,7 @@ export function TeamBoard() {
                   </p>
                   <p className="text-xs text-slate-500">
                     L10 {r.hit_l10 != null ? `${Math.round(Number(r.hit_l10) * 100)}%` : "—"} · proj. {r.projection != null ? Number(r.projection).toFixed(1) : "—"}
+                    {r.model_prob ? <> · odd justa <b className="text-slate-300">{(1 / Number(r.model_prob)).toFixed(2)}</b></> : null}
                     {r.matchup_grade && <> · matchup <b className="text-slate-300">{r.matchup_grade}</b></>}
                   </p>
                 </div>

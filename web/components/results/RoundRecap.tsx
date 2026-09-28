@@ -11,7 +11,7 @@ import { RecapArt } from "@/components/share/ShareArt";
 
 const SUBJECT_LABEL: Record<string, string> = { home: "Mandante", away: "Visitante", match: "Jogo" };
 
-/** "Mercados que se destacaram": resultado dos picks automáticos do dia (score ≥ 70), liquidados sozinhos. */
+/** "Mercados que se destacaram": resultado dos picks automáticos do dia (score ≥ 65), liquidados sozinhos. */
 export function RoundRecap() {
   const [rows, setRows] = useState<PickRecapRow[]>([]);
   const [day, setDay] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export function RoundRecap() {
     return (
       <div className="mx-auto mt-20 max-w-md text-center text-slate-400">
         <Trophy className="mx-auto mb-3 h-8 w-8" />
-        Ainda não há rodadas liquidadas. Os picks do dia são salvos antes dos jogos (score ≥ 70) e aparecem aqui depois que terminam.
+        Ainda não há rodadas liquidadas. Os picks do dia são salvos antes dos jogos (score ≥ 65) e aparecem aqui depois que terminam.
       </div>
     );
 
@@ -81,7 +81,7 @@ export function RoundRecap() {
           <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 to-surface p-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-emerald-300">Mercados que</p>
             <p className="text-4xl font-black leading-none text-white">se <span className="text-emerald-400">destacaram</span></p>
-            <p className="mt-3 text-sm text-slate-400">Picks automáticos do PropsEdge (score ≥ 70), conferidos com o resultado oficial.</p>
+            <p className="mt-3 text-sm text-slate-400">Picks automáticos do PropsEdge (score ≥ 65), conferidos com o resultado oficial.</p>
           </div>
           <div className="rounded-2xl border border-line bg-surface p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Overall da rodada</p>
