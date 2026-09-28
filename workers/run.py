@@ -5,6 +5,7 @@
     python run.py context                     # só classificação, desfalques, prováveis e escalações
     python run.py model_props                 # props de jogadores com linha do modelo (sem créditos)
     python run.py live_alerts                 # pressão ao vivo + alertas (futebol)
+    python run.py mlb_context                 # MLB oficial: prováveis + escalação com ordem de rebatedores
     python run.py odds                        # odds de props (The Odds API)
     python run.py boxscores                   # placar/stats ao vivo + finalização (Auto Green/Red)
     python run.py analytics                   # motor de confiança + EV
@@ -49,14 +50,14 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("job", choices=["backfill", "schedule", "odds", "boxscores", "analytics",
                                     "pipeline", "dvp", "live", "setup", "teams", "team_stats",
-                                    "context", "model_props", "live_alerts"])
+                                    "context", "model_props", "live_alerts", "mlb_context"])
     ap.add_argument("--sports", default=",".join(SPORTS))
     ap.add_argument("--days", type=int, default=30)
     args = ap.parse_args()
     sports = [s.strip() for s in args.sports.split(",") if s.strip() in SPORTS]
 
     from jobs import (backfill, compute_analytics, compute_team_analytics, live_alerts, live_worker,
-                      model_props, sync_boxscores, sync_context, sync_schedule)
+                      mlb_context, model_props, sync_boxscores, sync_context, sync_schedule)
 
     def safe(fn, *a):
         """Etapas novas não podem derrubar o resto do ciclo (se o ESPN falhar, segue)."""
@@ -77,6 +78,8 @@ def main() -> None:
         model_props.run(sports)
     elif job == "live_alerts":
         live_alerts.run()
+    elif job == "mlb_context":
+        mlb_context.run()
     elif job == "odds":
         _odds(sports)
     elif job == "boxscores":
@@ -86,6 +89,8 @@ def main() -> None:
         compute_analytics.run()
     elif job == "pipeline":
         safe(_odds, sports)
+        if "mlb" in sports:
+            safe(mlb_context.run, True)        # escalações que saíram nas últimas horas
         safe(model_props.run, sports)
         compute_analytics.run()
         compute_team_analytics.run()

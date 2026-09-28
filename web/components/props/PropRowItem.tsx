@@ -59,7 +59,7 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
             <p className="truncate font-semibold text-slate-100">
               {row.player_name}
               {row.player_status === "questionable" && <span className="ml-1 text-xs text-amber-300">(Q)</span>}
-              {row.confirmed_starter && <span className="ml-1 rounded bg-emerald-500/15 px-1 text-[10px] font-bold text-emerald-300" title="Titular confirmado / arremessador provável">TIT</span>}
+              {row.confirmed_starter && <span className="ml-1 rounded bg-emerald-500/15 px-1 text-[10px] font-bold text-emerald-300" title="Titular confirmado / arremessador provável">TIT{row.batting_order ? ` ${row.batting_order}º` : ""}</span>}
               {inj && <span className="ml-1 rounded bg-amber-500/15 px-1 text-[10px] font-bold text-amber-300" title={row.injury_detail ?? inj}>{inj}</span>}
             </p>
             <p className="truncate text-xs text-slate-400">

@@ -112,3 +112,26 @@ def test_model_props_keep_rules():
            "probable": False, "starter": False, "lineup_known": True}
     assert not _keep(soc) and _keep({**soc, "starter": True})
     assert not _keep({**soc, "sport_id": "nfl", "stat_key": "pass_yds", "mean": 40, "n": 3})
+
+
+def test_mlb_official_parsers():
+    from datetime import datetime, timezone
+    from providers.mlb_official import parse_lineup, parse_schedule
+    from jobs.mlb_context import _match
+    sched = parse_schedule({"dates": [{"games": [{
+        "gamePk": 822679, "gameDate": "2026-09-27T17:05:00Z", "status": {"abstractGameState": "Preview"},
+        "teams": {"home": {"team": {"id": 120, "name": "Washington Nationals"},
+                           "probablePitcher": {"id": 687792, "fullName": "DJ Herz"}},
+                  "away": {"team": {"id": 121, "name": "New York Mets"}}}}]}]})
+    g = sched[0]
+    assert g["game_pk"] == 822679 and g["home_prob"] == {"id": "687792", "name": "DJ Herz"} and g["away_prob"] is None
+    ours = {"start_time": datetime(2026, 9, 27, 18, 0, tzinfo=timezone.utc),
+            "home": "Washington Nationals", "away": "New York Mets"}
+    assert _match(ours, sched) is g
+    box = {"teams": {"home": {"players": {
+        "ID1": {"person": {"id": 1, "fullName": "A"}, "battingOrder": "200", "position": {"abbreviation": "SS"}},
+        "ID2": {"person": {"id": 2, "fullName": "B"}, "battingOrder": "100"},
+        "ID3": {"person": {"id": 3, "fullName": "C"}, "battingOrder": "101"},
+        "ID4": {"person": {"id": 4, "fullName": "D"}}}}, "away": {"players": {}}}}
+    lu = parse_lineup(box)
+    assert [(p["name"], p["order"]) for p in lu["home"]] == [("B", 1), ("A", 2)] and lu["away"] == []

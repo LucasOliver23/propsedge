@@ -76,7 +76,7 @@ def _keep(r: dict) -> bool:
             return bool(r["probable"])          # só o arremessador provável do dia
         if key == "hits" and pos in PITCHER_POS:
             return False
-    if sport == "soccer" and r["lineup_known"]:
+    if sport in ("soccer", "mlb") and r["lineup_known"] and key != "strikeouts":
         return bool(r["starter"])               # escalação saiu: só titulares
     return True
 

@@ -52,6 +52,7 @@ export interface PropRow {
   injury_status: string | null;        // Out, Questionable, 15-Day-IL...
   injury_detail: string | null;
   confirmed_starter: boolean;          // titular confirmado / arremessador provável
+  batting_order: number | null;        // MLB: posição na ordem de rebatedores (1-9)
 }
 
 /** Linha da view `v_my_bets` */

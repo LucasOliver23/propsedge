@@ -129,7 +129,8 @@ def _context(conn, prov, sport_id: str) -> tuple[int, int, int]:
 
         game_ids = sorted({gid for gid, _ in lineups})
         if game_ids:
-            cur.execute("delete from game_lineups where game_id = any(%s)", (game_ids,))
+            cur.execute("delete from game_lineups where game_id = any(%s) and athlete_ext not like 'mlb:%%'",
+                        (game_ids,))
         cur.executemany(
             """insert into game_lineups (game_id, team_id, athlete_ext, role, player_id, name, updated_at)
                values (%s,%s,%s,%s,%s,%s, now()) on conflict (game_id, athlete_ext, role) do nothing""",
@@ -157,3 +158,9 @@ def run(sports: list[str]) -> None:
                      sport_id, n_st, g, n_inj, n_lu)
         except Exception:
             log.exception("[%s] falha no contexto (classificação/desfalques) — seguindo", sport_id)
+    if "mlb" in sports:
+        try:
+            from jobs import mlb_context        # API oficial da MLB: prováveis + escalação confirmada
+            mlb_context.run()
+        except Exception:
+            log.exception("MLB oficial falhou — seguindo")
