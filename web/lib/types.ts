@@ -53,9 +53,11 @@ export interface PropRow {
 /** Linha da view `v_my_bets` */
 export interface TrackedBet {
   id: string;
-  market_id: number;
+  kind: "player" | "team" | "match";
+  team_id: number | null;
+  market_id: number | null;
   game_id: number;
-  player_id: number;
+  player_id: number | null;
   player_name: string;
   stat_key: string;
   stat_label: string | null;
@@ -87,4 +89,74 @@ export interface Profile {
   bankroll: number;
   starting_bankroll: number;
   unit_size: number;
+}
+
+// ---------------------------------------------------------------- mercados de time
+export type Subject = "home" | "away" | "match";
+
+export interface SeriesPoint {
+  v: number;      // valor
+  d: string;      // data ISO
+  o: string;      // adversário (ou "CASA x FORA" no mercado de jogo)
+  h: boolean;     // jogou em casa?
+}
+
+export interface TeamSeries {
+  l20: SeriesPoint[];          // mais recente primeiro
+  venue: SeriesPoint[];        // casa (mandante) ou fora (visitante)
+  h2h: SeriesPoint[];
+  season: number[];
+  allowed_avg?: number | null; // quanto o adversário cede (média L10)
+  league_avg?: number | null;
+  sd?: number;
+  home_avg?: number;           // só no mercado de jogo
+  away_avg?: number;
+  home_l10?: number[];
+  away_l10?: number[];
+}
+
+/** Linha da view `v_team_board` */
+export interface TeamMarketRow {
+  game_id: number;
+  subject: Subject;
+  stat_key: string;
+  stat_label: string | null;
+  priority: number | null;
+  team_id: number | null;
+  team_name: string | null;
+  team_abbr: string | null;
+  team_logo: string | null;
+  default_line: number;
+  default_side: Side;
+  projection: number | null;
+  model_prob: number | null;
+  score: number;
+  hit_l10: number | null;
+  matchup_grade: string | null;
+  matchup_factor: number | null;
+  data: TeamSeries;
+  computed_at: string;
+  sport_id: SportId;
+  start_time: string;
+  game_status: GameStatus;
+  league_slug: string | null;
+  home_team_id: number;
+  home_name: string;
+  home_abbr: string | null;
+  home_logo: string | null;
+  away_team_id: number;
+  away_name: string;
+  away_abbr: string | null;
+  away_logo: string | null;
+}
+
+export interface PickRecapRow {
+  dia: string;
+  sport_id: SportId;
+  stat_key: string;
+  stat_label: string;
+  subject: Subject;
+  entries: number;
+  greens: number;
+  reds: number;
 }

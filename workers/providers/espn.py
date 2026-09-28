@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 import httpx
 
 from config import COMBOS, SPORTS
-from providers.base import NBoxScore, NGame, NPlayerLine
+from providers.base import NBoxScore, NGame, NPlayerLine, NTeamLine
 
 BASE = "https://site.web.api.espn.com/apis/site/v2/sports"
 
@@ -33,6 +33,37 @@ KEY_MAP: dict[str, dict] = {
 FAMILY = {"nba": "basketball", "wnba": "basketball", "ncaab": "basketball",
           "nfl": "nfl", "mlb": "mlb", "nhl": "nhl", "soccer": "soccer"}
 EXTRA_COMBOS = {"nhl": {"points": ("goals", "assists")}}
+
+# Estatísticas de TIME: nome ESPN (ou "grupo.nome") -> chave canônica (team_market_types.key)
+TEAM_MAP: dict[str, dict[str, str]] = {
+    "soccer": {
+        "wonCorners": "corners", "foulsCommitted": "fouls", "totalShots": "shots",
+        "shotsOnTarget": "shots_on_target", "yellowCards": "yellow_cards", "redCards": "red_cards",
+        "offsides": "offsides", "saves": "saves", "possessionPct": "possession",
+        "throwIns": "throw_ins", "totalThrowIns": "throw_ins", "throws": "throw_ins",
+        "totalPasses": "passes", "totalCrosses": "crosses", "totalTackles": "tackles",
+    },
+    "basketball": {
+        "totalRebounds": "rebounds", "rebounds": "rebounds", "assists": "assists",
+        "threePointFieldGoalsMade": "threes", "turnovers": "turnovers", "totalTurnovers": "turnovers",
+        "steals": "steals", "blocks": "blocks",
+    },
+    "nfl": {
+        "totalYards": "total_yards", "netPassingYards": "pass_yds", "rushingYards": "rush_yds",
+        "turnovers": "turnovers", "firstDowns": "first_downs",
+    },
+    "mlb": {"batting.hits": "hits", "hits": "hits", "batting.homeRuns": "home_runs", "errors": "errors"},
+    "nhl": {"shotsTotal": "shots", "shots": "shots", "hits": "hits", "powerPlayGoals": "pp_goals"},
+}
+# chave do placar final e parciais por família: (chave, índices de períodos somados)
+SCORE_KEY = {"soccer": "goals", "basketball": "points", "nfl": "points", "mlb": "runs", "nhl": "goals"}
+PERIOD_KEYS = {
+    "soccer": {"goals_1h": [0], "goals_2h": [1]},
+    "basketball": {"points_q1": [0], "points_1h": [0, 1]},
+    "nfl": {"points_1h": [0, 1]},
+    "mlb": {"runs_f5": [0, 1, 2, 3, 4]},
+    "nhl": {"goals_p1": [0]},
+}
 
 
 def _num(v) -> float | None:
@@ -66,7 +97,7 @@ class ESPNProvider:
     ext_key = "espn"
 
     def __init__(self) -> None:
-                self.http = httpx.Client(timeout=20, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36", "Referer": "https://www.espn.com/"})
+        self.http = httpx.Client(timeout=20, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36", "Referer": "https://www.espn.com/"})
 
     # ------------------------------------------------------------------ agenda
     def _parse_event(self, sport_id: str, ev: dict, path: str) -> NGame:
@@ -92,6 +123,8 @@ class ESPNProvider:
             status=_status(st), period=str(st.get("period") or "") or None, clock=st.get("displayClock"),
             home_score=score(home), away_score=score(away),
             meta={"espn_path": path},
+            home_logo=home["team"].get("logo") or ((home["team"].get("logos") or [{}])[0].get("href")),
+            away_logo=away["team"].get("logo") or ((away["team"].get("logos") or [{}])[0].get("href")),
         )
 
     def schedule(self, sport_id: str, days_ahead: int = 2, days_back: int = 1) -> list[NGame]:
@@ -135,8 +168,65 @@ class ESPNProvider:
                 if all(p in pl.stats for p in parts):
                     pl.stats[combo] = sum(pl.stats[p] for p in parts)
 
+        teams = self._parse_team_stats(data, header_comp, family)
         complete = header_comp.get("status", {}).get("type", {}).get("completed", False)
-        return NBoxScore(game=game, players=list(players.values()), complete=bool(complete))
+        return NBoxScore(game=game, players=list(players.values()), complete=bool(complete), teams=teams)
+
+    # ------------------------------------------------------- estatística de time
+    def _parse_team_stats(self, data: dict, header_comp: dict, family: str) -> list[NTeamLine]:
+        tmap = TEAM_MAP.get(family, {})
+        out: dict[str, NTeamLine] = {}
+
+        def flat(stats: list, prefix: str = "") -> dict[str, float]:
+            res: dict[str, float] = {}
+            for s in stats or []:
+                if isinstance(s.get("stats"), list):      # MLB agrupa (batting/pitching)
+                    res.update(flat(s["stats"], f"{(s.get('name') or '').lower()}."))
+                    continue
+                name = s.get("name")
+                raw = s.get("displayValue", s.get("value"))
+                if not name or raw is None:
+                    continue
+                if "-" in name and isinstance(raw, str) and "-" in raw:   # "made-attempted"
+                    for sk, sv in zip(name.split("-"), raw.split("-")):
+                        v = _num(sv)
+                        if v is not None:
+                            res[prefix + sk] = v
+                    continue
+                v = _num(str(raw).replace("%", ""))
+                if v is not None:
+                    res[prefix + name] = v
+            return res
+
+        for block in data.get("boxscore", {}).get("teams", []):
+            ext = str(block.get("team", {}).get("id"))
+            raw = flat(block.get("statistics", []))
+            stats: dict[str, float] = {}
+            for k, v in raw.items():
+                canon = tmap.get(k) or tmap.get(k.split(".", 1)[-1])
+                if canon and canon not in stats:
+                    stats[canon] = v
+            out[ext] = NTeamLine(team_ext=ext, stats=stats)
+
+        # placar final e parciais (linescores)
+        for c in header_comp.get("competitors", []):
+            ext = str(c.get("team", {}).get("id"))
+            line = out.setdefault(ext, NTeamLine(team_ext=ext))
+            sc = c.get("score")
+            if isinstance(sc, dict):
+                sc = sc.get("value")
+            if _num(sc) is not None:
+                line.stats[SCORE_KEY[family]] = _num(sc)
+            periods = [_num((ls or {}).get("displayValue", (ls or {}).get("value"))) for ls in c.get("linescores") or []]
+            for key, idxs in PERIOD_KEYS.get(family, {}).items():
+                if periods and max(idxs) < len(periods) and all(periods[i] is not None for i in idxs):
+                    line.stats[key] = sum(periods[i] for i in idxs)
+
+        if family == "soccer":
+            for line in out.values():
+                if "yellow_cards" in line.stats or "red_cards" in line.stats:
+                    line.stats["cards"] = line.stats.get("yellow_cards", 0) + line.stats.get("red_cards", 0)
+        return [t for t in out.values() if t.stats]
 
     def _parse_team_block(self, block: dict, family: str, players: dict[str, NPlayerLine]) -> None:
         team_ext = str(block["team"]["id"])

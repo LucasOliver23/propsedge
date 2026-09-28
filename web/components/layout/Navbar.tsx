@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { Activity, LayoutGrid, Ticket } from "lucide-react";
+import { Activity, LayoutGrid, Shield, Ticket, Trophy } from "lucide-react";
 
 const LINKS = [
-  { href: "/props", label: "Props do dia", icon: LayoutGrid },
+  { href: "/props", label: "Jogadores", icon: LayoutGrid },
+  { href: "/times", label: "Times & Jogos", icon: Shield },
   { href: "/live", label: "Ao vivo", icon: Activity },
   { href: "/bets", label: "Bilheteira", icon: Ticket },
+  { href: "/resultados", label: "Resultados", icon: Trophy },
 ];
 
 export function Navbar() {

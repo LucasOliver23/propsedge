@@ -23,6 +23,8 @@ class NGame:
     home_score: int | None = None
     away_score: int | None = None
     meta: dict = field(default_factory=dict)   # extras salvos em games.external_ids (ex.: liga ESPN)
+    home_logo: str | None = None
+    away_logo: str | None = None
 
 
 @dataclass
@@ -38,10 +40,17 @@ class NPlayerLine:
 
 
 @dataclass
+class NTeamLine:
+    team_ext: str
+    stats: dict[str, float] = field(default_factory=dict)   # inclui parciais: goals_1h, points_q1, runs_f5...
+
+
+@dataclass
 class NBoxScore:
     game: NGame
     players: list[NPlayerLine]
     complete: bool               # True quando o provedor marca o jogo como encerrado/oficial
+    teams: list[NTeamLine] = field(default_factory=list)
 
 
 @dataclass

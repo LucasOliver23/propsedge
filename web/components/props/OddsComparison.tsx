@@ -23,7 +23,7 @@ export function OddsComparison({ books, line, fairProb }: { books: BookOdds[] | 
         {fairOdds && <span>Odd justa: <b className="text-slate-200">{fairOdds.toFixed(2)}</b></span>}
       </div>
       <ul className="divide-y divide-line rounded-lg border border-line">
-        {books.slice(0, 4).map((b) => {
+        {books.map((b) => {
           const isBest = b.odds != null && b.odds === best;
           const sameLine = b.line === line;
           return (

@@ -26,8 +26,8 @@ def provider_for(sport_id: str) -> StatsProvider:
 
 def upsert_game(conn, g: NGame, ext_key: str) -> int:
     ext = json.dumps({ext_key: g.ext_id, **{k: str(v) for k, v in g.meta.items()}})
-    home = get_or_create_team(conn, g.sport_id, g.home_name, g.home_abbr, ext_key, g.home_ext)
-    away = get_or_create_team(conn, g.sport_id, g.away_name, g.away_abbr, ext_key, g.away_ext)
+    home = get_or_create_team(conn, g.sport_id, g.home_name, g.home_abbr, ext_key, g.home_ext, g.home_logo)
+    away = get_or_create_team(conn, g.sport_id, g.away_name, g.away_abbr, ext_key, g.away_ext, g.away_logo)
     with conn.cursor() as cur:
         cur.execute("select id, status from games where sport_id=%s and external_ids->>%s = %s",
                     (g.sport_id, ext_key, g.ext_id))
@@ -78,8 +78,24 @@ def save_boxscore(conn, sport_id: str, game_id: int, box: NBoxScore, ext_key: st
                 "minutes": pl.minutes, "dnp": pl.dnp or not pl.stats, "stats": pl.stats,
             })
 
+    # estatísticas de time (escanteios, faltas, gols 1T, pontos por quarto...)
+    live_team, final_team = [], []
+    for tl in box.teams:
+        team_id = team_of.get(tl.team_ext)
+        if team_id is None:
+            continue
+        opp_id = g["away_team_id"] if team_id == g["home_team_id"] else g["home_team_id"]
+        live_team.append({"game_id": game_id, "team_id": team_id, "stats": tl.stats})
+        if box.complete:
+            final_team.append({"team_id": team_id, "game_id": game_id, "game_date": g["start_time"].date(),
+                               "sport_id": sport_id, "opponent_team_id": opp_id,
+                               "is_home": team_id == g["home_team_id"], "stats": tl.stats})
+    upsert(conn, "live_team_stats", live_team, conflict=("game_id", "team_id"))
+    if final_team:
+        upsert(conn, "team_game_stats", final_team, conflict=("team_id", "game_id"))
+
     upsert(conn, "live_player_stats", live_rows, conflict=("game_id", "player_id"))
-    if box.complete and final_rows:
+    if box.complete and (final_rows or final_team):
         upsert(conn, "player_game_stats", final_rows, conflict=("player_id", "game_id", "game_date"))
         with conn.cursor() as cur:
             # esta linha dispara games_settle -> settle_game() no Postgres

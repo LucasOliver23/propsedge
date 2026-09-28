@@ -29,6 +29,9 @@ export const RPC_ERRORS: Record<string, string> = {
   no_odds_available: "Sem odds disponíveis para esse lado agora.",
   market_not_found: "Mercado não encontrado (pode ter sido removido).",
   cannot_untrack: "Só é possível desafixar antes do início do jogo.",
+  invalid_odds: "Informe a odd da sua casa (maior que 1.01).",
+  invalid_line: "Linha inválida.",
+  invalid_kind: "Mercado inválido.",
 };
 
 export function rpcErrorMessage(message?: string): string {

@@ -19,7 +19,7 @@ type LiveGame = { period: string | null; clock: string | null; home_score: numbe
  *   o hook useTrackedBets recebe esse evento e o card "vira" sozinho.
  */
 export function LiveTracker() {
-  const { bets, ready } = useTrackedBets();
+  const { bets, ready, reload } = useTrackedBets();
   const open = useMemo(() => bets.filter((b) => b.status === "live" || b.status === "pending"), [bets]);
   const recent = useMemo(
     () => bets.filter((b) => ["green", "red", "push", "void"].includes(b.status)).slice(0, 12),
@@ -61,6 +61,9 @@ export function LiveTracker() {
           setTimeout(() => setFlash((f) => { const n = new Set(f); n.delete(key); return n; }), 1200);
         })
       .on("postgres_changes",
+        { event: "*", schema: "public", table: "live_team_stats", filter: `game_id=in.${inList}` },
+        () => { reload(); })
+      .on("postgres_changes",
         { event: "UPDATE", schema: "public", table: "games", filter: `id=in.${inList}` },
         (p) => {
           const r = p.new as LiveGame & { id: number };
@@ -68,7 +71,7 @@ export function LiveTracker() {
         })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [gameIds]);
+  }, [gameIds, reload]);
 
   if (ready && !open.length && !recent.length) {
     return <Empty />;
@@ -83,7 +86,7 @@ export function LiveTracker() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {open.map((b) => {
             const key = `${b.game_id}:${b.player_id}`;
-            const current = stats[key]?.[b.stat_key] ?? b.live_value ?? 0;
+            const current = (b.kind === "player" ? stats[key]?.[b.stat_key] : undefined) ?? b.live_value ?? 0;
             return <LiveCard key={b.id} bet={b} current={Number(current)} game={games[b.game_id]} flash={flash.has(key)} />;
           })}
         </div>

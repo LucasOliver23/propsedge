@@ -7,6 +7,8 @@
     python run.py analytics                   # motor de confiança + EV
     python run.py pipeline                    # odds -> analytics (cron de 30 min)
     python run.py dvp                         # recalcula DvP
+    python run.py teams                       # mercados de time/jogo (escanteios, gols 1T, faltas...)
+    python run.py team_stats --days 60        # carga de estatísticas de time de jogos antigos
     python run.py live                        # processo contínuo (Fly.io)
     python run.py setup      --days 30        # tudo acima em ordem (primeira carga)
 
@@ -43,13 +45,14 @@ def _odds(sports: list[str]) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("job", choices=["backfill", "schedule", "odds", "boxscores", "analytics",
-                                    "pipeline", "dvp", "live", "setup"])
+                                    "pipeline", "dvp", "live", "setup", "teams", "team_stats"])
     ap.add_argument("--sports", default=",".join(SPORTS))
     ap.add_argument("--days", type=int, default=30)
     args = ap.parse_args()
     sports = [s.strip() for s in args.sports.split(",") if s.strip() in SPORTS]
 
-    from jobs import backfill, compute_analytics, live_worker, sync_boxscores, sync_schedule
+    from jobs import (backfill, compute_analytics, compute_team_analytics, live_worker, sync_boxscores,
+                      sync_schedule)
 
     job = args.job
     if job == "backfill":
@@ -65,16 +68,23 @@ def main() -> None:
     elif job == "pipeline":
         _odds(sports)
         compute_analytics.run()
+        compute_team_analytics.run()
+    elif job == "teams":
+        compute_team_analytics.run()
+    elif job == "team_stats":
+        sync_boxscores.run_missing_team_stats(sports, days=args.days)
     elif job == "dvp":
         _dvp()
     elif job == "live":
         live_worker.run()
     elif job == "setup":
         backfill.run(sports, args.days)
+        sync_boxscores.run_missing_team_stats(sports, days=args.days + 1)
         sync_schedule.run(sports)
         _dvp()
         _odds(sports)
         compute_analytics.run()
+        compute_team_analytics.run()
 
 
 if __name__ == "__main__":

@@ -109,7 +109,7 @@ insert into stat_types (sport_id, key, label, odds_api_market) values
   ('ncaab','points','Pontos','player_points'),
   ('ncaab','rebounds','Rebotes','player_rebounds'),
   ('mlb','hits','Rebatidas','batter_hits'),
-  ('mlb','total_bases','Total de bases','batter_total_bases'),
+  ('mlb','total_bases','Total de bases',null),   -- ESPN não traz 2B/3B no box score
   ('mlb','strikeouts','Strikeouts (arremessador)','pitcher_strikeouts'),
   ('nfl','pass_yds','Jardas passe','player_pass_yds'),
   ('nfl','rush_yds','Jardas corrida','player_rush_yds'),

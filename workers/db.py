@@ -44,18 +44,23 @@ def upsert(conn: psycopg.Connection, table: str, rows: Sequence[dict[str, Any]],
     return out
 
 
-def get_or_create_team(conn, sport_id: str, name: str, abbr: str | None, ext_key: str, ext_id: str) -> int:
+def get_or_create_team(conn, sport_id: str, name: str, abbr: str | None, ext_key: str, ext_id: str,
+                       logo: str | None = None) -> int:
     with conn.cursor() as cur:
-        cur.execute("select id from teams where sport_id=%s and external_ids->>%s = %s", (sport_id, ext_key, ext_id))
+        cur.execute("select id, logo_url from teams where sport_id=%s and external_ids->>%s = %s", (sport_id, ext_key, ext_id))
         row = cur.fetchone()
         if row:
+            if logo and not row["logo_url"]:
+                cur.execute("update teams set logo_url=%s where id=%s", (logo, row["id"]))
             return row["id"]
         cur.execute(
-            """insert into teams (sport_id, name, abbr, external_ids) values (%s,%s,%s,jsonb_build_object(%s::text,%s::text))
+            """insert into teams (sport_id, name, abbr, logo_url, external_ids)
+               values (%s,%s,%s,%s,jsonb_build_object(%s::text,%s::text))
                on conflict (sport_id, name) do update
-                 set external_ids = teams.external_ids || excluded.external_ids, abbr = coalesce(excluded.abbr, teams.abbr)
+                 set external_ids = teams.external_ids || excluded.external_ids, abbr = coalesce(excluded.abbr, teams.abbr),
+                     logo_url = coalesce(teams.logo_url, excluded.logo_url)
                returning id""",
-            (sport_id, name, abbr, ext_key, ext_id),
+            (sport_id, name, abbr, logo, ext_key, ext_id),
         )
         return cur.fetchone()["id"]
 

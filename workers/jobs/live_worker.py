@@ -74,6 +74,8 @@ def _periodic_jobs(sports: list[str]) -> None:
             if now - last_pipe > 30 * 60:
                 _odds(list(SPORTS))
                 compute_analytics.run()
+                from jobs import compute_team_analytics
+                compute_team_analytics.run()
                 last_pipe = now
         except Exception:
             log.exception("erro nos jobs periódicos")

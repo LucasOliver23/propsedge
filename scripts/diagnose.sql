@@ -13,7 +13,7 @@ select sport_id, count(*) from team_defense_vs_position group by 1 order by 1;
 \echo '=== Props, odds e análises (próximas 36h) ==='
 select m.sport_id, count(distinct m.id) as mercados, count(distinct o.bookmaker_id) as casas,
        count(distinct pa.market_id) as analisados, round(avg(pa.confidence)) as conf_media,
-       count(*) filter (where pa.ev >= 0.03) as ev_plus
+       count(distinct (pa.market_id, pa.side)) filter (where pa.ev >= 0.03) as ev_plus
 from prop_markets m
 join games g on g.id = m.game_id and g.start_time > now() - interval '6 hours'
 left join odds_current o on o.market_id = m.id
@@ -23,3 +23,16 @@ group by 1 order by 1;
 select sport_id, count(*) from v_props_board group by 1 order by 1;
 \echo '=== Agendamentos pg_cron ==='
 select jobname, schedule from cron.job order by 1;
+\echo '=== Estatísticas de TIME por esporte/liga ==='
+select t.sport_id, coalesce(g.external_ids ->> 'espn_path', t.sport_id) as liga, count(*) as linhas,
+       string_agg(distinct k, ', ') as chaves
+from team_game_stats t join games g on g.id = t.game_id
+cross join lateral jsonb_object_keys(t.stats) k
+group by 1, 2 order by 1, 2;
+\echo '=== Mercados de time analisados (próximas 72h) ==='
+select g.sport_id, a.subject, count(*) as mercados, round(avg(a.score)) as score_medio,
+       count(*) filter (where a.score >= 70) as score_70
+from team_market_analytics a join games g on g.id = a.game_id
+where g.start_time > now() group by 1, 2 order by 1, 2;
+\echo '=== Picks do dia ==='
+select status, count(*) from team_picks group by 1;

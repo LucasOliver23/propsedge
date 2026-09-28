@@ -73,3 +73,49 @@ def test_schedule_parses_events():
     sb = {"events": [{"id": "401", "date": "2026-09-26T00:10Z", "competitions": HEADER["competitions"]}]}
     games = _provider(sb).schedule("mlb", days_ahead=0, days_back=0)
     assert len(games) == 1 and games[0].meta == {"espn_path": "baseball/mlb"}
+
+
+SOCCER_TEAM_SUMMARY = {
+    "header": {"competitions": [{**HEADER["competitions"][0], "competitors": [
+        {"homeAway": "home", "score": "2", "linescores": [{"displayValue": "1"}, {"displayValue": "1"}],
+         "team": {"id": "819", "displayName": "Criciuma", "abbreviation": "CRI", "logo": "https://x/cri.png"}},
+        {"homeAway": "away", "score": "1", "linescores": [{"displayValue": "0"}, {"displayValue": "1"}],
+         "team": {"id": "2029", "displayName": "Operario", "abbreviation": "OPE"}},
+    ]}]},
+    "boxscore": {"teams": [
+        {"team": {"id": "819"}, "statistics": [{"name": "wonCorners", "displayValue": "6"},
+                                               {"name": "foulsCommitted", "displayValue": "16"},
+                                               {"name": "possessionPct", "displayValue": "55.4%"},
+                                               {"name": "yellowCards", "displayValue": "2"},
+                                               {"name": "redCards", "displayValue": "1"}]},
+        {"team": {"id": "2029"}, "statistics": [{"name": "wonCorners", "displayValue": "3"}]},
+    ]},
+}
+
+NBA_TEAM_SUMMARY = {
+    "header": {"competitions": [{**HEADER["competitions"][0], "competitors": [
+        {**HEADER["competitions"][0]["competitors"][0],
+         "linescores": [{"value": 30}, {"value": 25}, {"value": 28}, {"value": 29}]},
+        HEADER["competitions"][0]["competitors"][1],
+    ]}]},
+    "boxscore": {"teams": [{"team": {"id": "13"}, "statistics": [
+        {"name": "threePointFieldGoalsMade-threePointFieldGoalsAttempted", "displayValue": "14-38"},
+        {"name": "totalRebounds", "displayValue": "47"}]}]},
+}
+
+
+def test_soccer_team_stats_and_halves():
+    box = _provider(SOCCER_TEAM_SUMMARY).boxscore("soccer", "700", {"espn_path": "soccer/bra.2"})
+    t = {x.team_ext: x.stats for x in box.teams}
+    assert t["819"]["corners"] == 6 and t["819"]["fouls"] == 16 and t["819"]["possession"] == 55.4
+    assert t["819"]["goals"] == 2 and t["819"]["goals_1h"] == 1 and t["819"]["goals_2h"] == 1
+    assert t["819"]["cards"] == 3
+    assert t["2029"]["goals_1h"] == 0 and t["2029"]["corners"] == 3
+    assert box.game.home_logo == "https://x/cri.png"
+
+
+def test_nba_team_stats_quarters():
+    box = _provider(NBA_TEAM_SUMMARY).boxscore("nba", "401", {"espn_path": "basketball/nba"})
+    lal = next(x.stats for x in box.teams if x.team_ext == "13")
+    assert lal["points"] == 112 and lal["points_q1"] == 30 and lal["points_1h"] == 55
+    assert lal["threes"] == 14 and lal["rebounds"] == 47

@@ -55,3 +55,29 @@ def run(sports: list[str], days: int = 3, limit: int = 400, workers: int = 6) ->
             counts[res] = counts.get(res, 0) + 1
     log.info("box scores: %s", counts or "nenhum jogo pendente")
     return counts
+
+
+MISSING_TEAM_SQL = """
+select g.id, g.sport_id, g.external_ids
+from games g
+where g.sport_id = any(%s)
+  and g.status = 'final' and g.stats_final
+  and g.start_time > now() - make_interval(days => %s)
+  and not exists (select 1 from team_game_stats t where t.game_id = g.id)
+order by g.start_time desc
+limit %s
+"""
+
+
+def run_missing_team_stats(sports: list[str], days: int = 60, limit: int = 5000, workers: int = 8) -> dict[str, int]:
+    """Preenche estatísticas de TIME de jogos já finalizados (carga inicial dos mercados de time)."""
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute(MISSING_TEAM_SQL, (sports, days, limit))
+        games = cur.fetchall()
+    log.info("stats de time: %d jogos finalizados sem estatística de time", len(games))
+    counts: dict[str, int] = {}
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for res in pool.map(_process, games):
+            counts[res] = counts.get(res, 0) + 1
+    log.info("stats de time: %s", counts)
+    return counts
