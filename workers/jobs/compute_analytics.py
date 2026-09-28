@@ -1,5 +1,9 @@
 """Roda o motor de confiança/EV para todas as props das próximas 36h. Cron: logo após sync_odds.
 
+Sem odd de casa (créditos da The Odds API acabaram ou mercado criado por jobs/model_props.py),
+a linha vem do modelo: a linha .5 mais próxima de 50/50 pela projeção do jogador (line_source='model').
+Nesses casos não há EV nem comparador — só confiança, hit rates e odd justa.
+
 Tudo que o motor precisa (L20, H2H, DvP, média da temporada) vem em UMA query com LATERAL joins,
 evitando N+1 mesmo com milhares de props.
 """
@@ -10,6 +14,7 @@ from collections import defaultdict
 from db import connect, upsert
 from engine.confidence import PropInput, compute_confidence, is_ev_alert
 from engine.odds_math import BookPrice, best_price, consensus_line, market_fair_prob
+from engine.team_score import book_line, ewma, stdev
 from jobs.common import log
 
 MARKETS_SQL = """
@@ -77,13 +82,17 @@ def run() -> None:
         rows, alerts = [], []
         for m in markets:
             book_prices = prices.get(m["market_id"], [])
-            line = consensus_line(book_prices)
-            if line is None:
-                continue
             recent = [float(v) for v in (m["recent_vals"] or []) if v is not None]
             opps = list(m["recent_opps"] or [])
             h2h = [float(v) for v in (m["h2h_vals"] or []) if v is not None]
             dvp = float(m["dvp_factor"]) if m["dvp_factor"] is not None else None
+            line = consensus_line(book_prices)
+            line_source = "book"
+            if line is None:
+                line = model_line(recent, dvp)
+                line_source = "model"
+                if line is None:
+                    continue
 
             for side in ("over", "under"):
                 bp = best_price(book_prices, line, side)
@@ -106,6 +115,7 @@ def run() -> None:
                     "fair_prob": res.fair_prob, "confidence": res.confidence,
                     "best_book": bp[0] if bp else None, "best_odds": bp[1] if bp else None,
                     "ev": res.ev,
+                    "line_source": line_source,
                 })
                 if bp and is_ev_alert(res, bp[1]):
                     alerts.append({
@@ -121,6 +131,21 @@ def run() -> None:
                update=["ev", "confidence"])
         conn.commit()
         log.info("analytics: %d linhas, %d alertas EV+", len(rows), len(alerts))
+
+
+MODEL_MIN_GAMES = 3
+
+
+def model_line(recent: list[float], dvp: float | None) -> float | None:
+    """Linha realista quando não há casa: projeção (média ponderada x ajuste leve de DvP) -> linha .5 ~50/50."""
+    if len(recent) < MODEL_MIN_GAMES:
+        return None
+    mu = ewma(recent[:10])
+    if dvp is not None:
+        mu *= min(max(dvp, 0.85), 1.15)
+    if mu <= 0:
+        return None
+    return book_line(mu, stdev(recent[:20]))
 
 
 def _upsert_analytics(conn, rows: list[dict]) -> None:

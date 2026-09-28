@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { Trash2 } from "lucide-react";
 import { useTrackedBets } from "@/hooks/useTrackedBets";
 import { BOOK_LABELS } from "@/lib/constants";
-import { brl, kickoff } from "@/lib/format";
+import { betText, brl, kickoff } from "@/lib/format";
 import type { BetStatus } from "@/lib/types";
 
 const STATUS: Record<BetStatus, { label: string; cls: string }> = {
@@ -67,7 +67,7 @@ export function BetSlip() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-slate-100">
-                {b.player_name} · {b.side === "over" ? "Mais" : "Menos"} {b.line} {b.stat_label ?? b.stat_key}
+                {b.player_name} · {betText(b.stat_key, b.side, b.line, b.stat_label)}
               </p>
               <p className="text-xs text-slate-400">
                 {b.away_abbr} @ {b.home_abbr} · {kickoff(b.start_time)} · @{Number(b.odds).toFixed(2)}{" "}

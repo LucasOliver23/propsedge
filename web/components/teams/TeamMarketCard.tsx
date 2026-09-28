@@ -31,6 +31,8 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
 
   const d = row.data;
   const isMatch = row.subject === "match";
+  const isYesNo = row.stat_key === "btts";            // Ambas marcam: linha fixa 0.5, Sim/Não
+  const sideLabel = (s: Side) => (isYesNo ? (s === "over" ? "Sim" : "Não") : s === "over" ? "Mais" : "Menos");
   const step = 1;
   const projection = row.projection != null ? Number(row.projection) : null;
   const factor = row.matchup_factor != null ? Number(row.matchup_factor) : null;
@@ -84,6 +86,7 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
           <h3 className="truncate text-xl font-black text-white">{title}</h3>
           <p className="text-xs text-slate-400">
             🕒 {kickoff(row.start_time)} · {leagueName(row.league_slug)}
+            {(row.home_rank || row.away_rank) && <> · tabela: {row.home_abbr ?? "casa"} {row.home_rank ? `${row.home_rank}º` : "—"} x {row.away_abbr ?? "fora"} {row.away_rank ? `${row.away_rank}º` : "—"}</>}
             {!isMatch && <> · {row.subject === "home" ? "🏠" : "✈️"} x {oppName}</>}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -91,16 +94,16 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
               {(["over", "under"] as Side[]).map((s) => (
                 <button key={s} onClick={() => setSide(s)}
                   className={clsx("px-2.5 py-1", side === s ? (s === "over" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300") : "text-slate-400")}>
-                  {s === "over" ? "Mais" : "Menos"}
+                  {sideLabel(s)}
                 </button>
               ))}
             </div>
-            <span className="font-semibold text-slate-100">{row.stat_label}{isMatch ? " (jogo)" : ""}</span>
-            <div className="flex items-center rounded-lg border border-line">
+            <span className="font-semibold text-slate-100">{row.stat_label}{isMatch && !isYesNo ? " (jogo)" : ""}</span>
+            {!isYesNo && <div className="flex items-center rounded-lg border border-line">
               <button aria-label="Diminuir linha" onClick={() => setLine((l) => Math.max(0.5, +(l - step).toFixed(1)))} className="px-2 py-1 text-slate-300 hover:text-white"><Minus className="h-3.5 w-3.5" /></button>
               <span className="w-12 text-center font-bold tabular-nums text-white">{line}</span>
               <button aria-label="Aumentar linha" onClick={() => setLine((l) => +(l + step).toFixed(1))} className="px-2 py-1 text-slate-300 hover:text-white"><Plus className="h-3.5 w-3.5" /></button>
-            </div>
+            </div>}
           </div>
         </div>
       </div>
@@ -108,9 +111,11 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
       {/* Números principais */}
       <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-4">
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">Projeção</p>
-          <p className="text-2xl font-bold tabular-nums text-emerald-300">{projection?.toFixed(1) ?? "—"}</p>
-          {projection != null && (
+          <p className="text-[11px] uppercase tracking-wide text-slate-500">{isYesNo ? "Chance de ambas" : "Projeção"}</p>
+          <p className="text-2xl font-bold tabular-nums text-emerald-300">
+            {isYesNo ? (d.p_btts != null ? `${Math.round(Number(d.p_btts) * 100)}%` : "—") : projection?.toFixed(1) ?? "—"}
+          </p>
+          {projection != null && !isYesNo && (
             <p className="text-xs text-slate-400">{projection >= line ? "+" : ""}{(projection - line).toFixed(1)} {projection >= line ? "acima" : "abaixo"}</p>
           )}
         </div>
@@ -129,7 +134,15 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
         </div>
       </div>
 
-      {isMatch && d.home_avg != null && d.away_avg != null && (
+      {isYesNo && d.home_avg != null && d.away_avg != null && (
+        <p className="-mt-2 pb-3 text-center text-sm text-slate-300">
+          Gols esperados: {row.home_abbr ?? row.home_name} <b className="text-white">{Number(d.home_avg).toFixed(2)}</b> x{" "}
+          <b className="text-white">{Number(d.away_avg).toFixed(2)}</b> {row.away_abbr ?? row.away_name}
+          <span className="block text-xs text-slate-500">no histórico, 1 = os dois marcaram · 0 = pelo menos um passou em branco</span>
+        </p>
+      )}
+
+      {isMatch && !isYesNo && d.home_avg != null && d.away_avg != null && (
         <p className="-mt-2 pb-3 text-center text-sm text-slate-300">
           {row.home_abbr ?? row.home_name} <b className="text-white">{Number(d.home_avg).toFixed(1)}</b> + {row.away_abbr ?? row.away_name}{" "}
           <b className="text-white">{Number(d.away_avg).toFixed(1)}</b> = <b className="text-emerald-300">{(Number(d.home_avg) + Number(d.away_avg)).toFixed(1)}</b>

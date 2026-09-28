@@ -271,3 +271,126 @@ class ESPNProvider:
                     position=(entry.get("position") or {}).get("abbreviation"),
                     minutes=None, dnp=not played, stats=stats,
                 )
+
+    # ------------------------------------------------------ classificação (tabela)
+    def standings(self, sport_id: str) -> list[dict]:
+        """Uma linha por time e liga: {league, team_ext, group, rank, played, wins, draws, losses, gf, ga, points}.
+        Endpoint: /apis/v2/sports/{path}/standings (mesmo host web do ESPN)."""
+        out: list[dict] = []
+        base = BASE.replace("/apis/site/v2/sports", "/apis/v2/sports")
+        for path in SPORTS[sport_id].espn_paths:
+            try:
+                r = self.http.get(f"{base}/{path}/standings")
+                if r.status_code >= 400:
+                    continue
+                data = r.json()
+            except Exception:
+                continue
+            out.extend(parse_standings(data, path))
+        return out
+
+    # ------------------------------------------- contexto pré-jogo (desfalques etc.)
+    def game_context(self, sport_id: str, game_ext_id: str, meta: dict | None = None) -> dict:
+        """Lê o summary do jogo ANTES de começar: desfalques (injuries), arremessador provável (MLB)
+        e escalação confirmada (futebol, quando sai ~1h antes)."""
+        path = (meta or {}).get("espn_path") or SPORTS[sport_id].espn_paths[0]
+        r = self.http.get(f"{BASE}/{path}/summary", params={"event": game_ext_id})
+        if r.status_code >= 400:
+            return {"injuries": [], "lineups": []}
+        return parse_context(r.json())
+
+
+def _stat_map(entry: dict) -> dict[str, float]:
+    res: dict[str, float] = {}
+    for s in entry.get("stats") or []:
+        name = s.get("name") or s.get("type")
+        v = s.get("value")
+        if v is None:
+            v = _num(s.get("displayValue"))
+        if name and isinstance(v, (int, float)):
+            res[name] = float(v)
+    return res
+
+
+def parse_standings(data: dict, league: str) -> list[dict]:
+    """Percorre children/standings recursivamente (liga única, conferências, divisões, grupos)."""
+    rows: list[dict] = []
+
+    def walk(node: dict, group: str | None) -> None:
+        entries = (node.get("standings") or {}).get("entries") or []
+        if entries:
+            block = []
+            for i, e in enumerate(entries):
+                team = e.get("team") or {}
+                if not team.get("id"):
+                    continue
+                st = _stat_map(e)
+                block.append({
+                    "league": league, "team_ext": str(team["id"]), "group": group,
+                    "rank_raw": st.get("rank") or st.get("playoffSeed") or 0, "order": i,
+                    "played": int(st.get("gamesPlayed", 0)), "wins": int(st.get("wins", 0)),
+                    "draws": int(st.get("ties", 0)), "losses": int(st.get("losses", 0)),
+                    "gf": st.get("pointsFor"), "ga": st.get("pointsAgainst"),
+                    "points": st.get("points") if "points" in st else st.get("wins"),
+                })
+            # posição: 'rank' do ESPN quando existe; senão ordena por pontos/vitórias
+            if all(b["rank_raw"] > 0 for b in block):
+                for b in block:
+                    b["rank"] = int(b["rank_raw"])
+            else:
+                block.sort(key=lambda b: (-(b["points"] or 0), -b["wins"], b["order"]))
+                for i, b in enumerate(block, 1):
+                    b["rank"] = i
+            for b in block:
+                b.pop("rank_raw"); b.pop("order")
+            rows.extend(block)
+        for child in node.get("children") or []:
+            walk(child, child.get("name") or group)
+
+    walk(data, None)
+    return rows
+
+
+OUT_WORDS = ("out", "injured reserve", "-il", " il", "suspen", "doubtful")
+
+
+def injury_level(status: str) -> str:
+    """Out/IL/IR/suspenso -> 'out'; Questionable/Day-To-Day -> 'questionable'."""
+    s = (status or "").lower()
+    if any(w in s for w in OUT_WORDS) or s.endswith("il"):
+        return "out"
+    return "questionable"
+
+
+def parse_context(data: dict) -> dict:
+    injuries, lineups = [], []
+    for team_block in data.get("injuries") or []:
+        team_ext = str((team_block.get("team") or {}).get("id") or "")
+        for inj in team_block.get("injuries") or []:
+            ath = inj.get("athlete") or {}
+            if not ath.get("id"):
+                continue
+            det = inj.get("details") or {}
+            detail = " ".join(x for x in (det.get("type"), det.get("detail")) if x) or None
+            injuries.append({
+                "athlete_ext": str(ath["id"]), "team_ext": team_ext, "name": ath.get("displayName") or "",
+                "position": (ath.get("position") or {}).get("abbreviation"),
+                "status": inj.get("status") or (inj.get("type") or {}).get("description") or "Out",
+                "detail": detail, "return_date": det.get("returnDate"),
+            })
+    comp = ((data.get("header") or {}).get("competitions") or [{}])[0]
+    for c in comp.get("competitors") or []:
+        team_ext = str((c.get("team") or {}).get("id") or "")
+        for p in c.get("probables") or []:
+            ath = p.get("athlete") or {}
+            if ath.get("id") and "pitcher" in (p.get("name") or "").lower():
+                lineups.append({"athlete_ext": str(ath["id"]), "team_ext": team_ext,
+                                "name": ath.get("displayName"), "role": "probable_pitcher"})
+    for team in data.get("rosters") or []:
+        team_ext = str((team.get("team") or {}).get("id") or "")
+        for entry in team.get("roster") or []:
+            ath = entry.get("athlete") or {}
+            if entry.get("starter") and ath.get("id"):
+                lineups.append({"athlete_ext": str(ath["id"]), "team_ext": team_ext,
+                                "name": ath.get("displayName"), "role": "starter"})
+    return {"injuries": injuries, "lineups": lineups}

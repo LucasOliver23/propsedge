@@ -109,6 +109,7 @@ export function TeamBoard() {
         {filtered.slice(0, limit).map((r) => {
           const k = key(r);
           const isMatch = r.subject === "match";
+          const yesNo = r.stat_key === "btts";
           return (
             <li key={k} className="rounded-xl border border-line bg-surface">
               <button onClick={() => setOpen((o) => (o === k ? null : k))} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02]">
@@ -118,18 +119,23 @@ export function TeamBoard() {
                     {isMatch ? `${r.home_name} x ${r.away_name}` : r.team_name}
                     {!isMatch && <span className="ml-1 text-xs font-normal text-slate-500">{r.subject === "home" ? "🏠 vs" : "✈️ @"} {r.subject === "home" ? r.away_abbr : r.home_abbr}</span>}
                   </p>
-                  <p className="truncate text-xs text-slate-400">{kickoff(r.start_time)} · {leagueName(r.league_slug)}</p>
+                  <p className="truncate text-xs text-slate-400">
+                    {kickoff(r.start_time)} · {leagueName(r.league_slug)}
+                    {(r.home_rank || r.away_rank) ? ` · ${r.home_rank ?? "—"}º x ${r.away_rank ?? "—"}º` : ""}
+                  </p>
                 </div>
                 <div className="hidden text-right sm:block">
                   <p className="text-sm">
                     <span className={clsx("mr-1 rounded px-1.5 py-0.5 text-[11px] font-bold uppercase", r.default_side === "over" ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300")}>
-                      {r.default_side === "over" ? "Mais" : "Menos"}
+                      {yesNo ? (r.default_side === "over" ? "Sim" : "Não") : r.default_side === "over" ? "Mais" : "Menos"}
                     </span>
-                    <b className="tabular-nums text-white">{Number(r.default_line)}</b>{" "}
-                    <span className="text-slate-300">{r.stat_label}{isMatch ? " (jogo)" : ""}</span>
+                    {!yesNo && <><b className="tabular-nums text-white">{Number(r.default_line)}</b>{" "}</>}
+                    <span className="text-slate-300">{r.stat_label}{isMatch && !yesNo ? " (jogo)" : ""}</span>
                   </p>
                   <p className="text-xs text-slate-500">
-                    L10 {r.hit_l10 != null ? `${Math.round(Number(r.hit_l10) * 100)}%` : "—"} · proj. {r.projection != null ? Number(r.projection).toFixed(1) : "—"}
+                    L10 {r.hit_l10 != null ? `${Math.round(Number(r.hit_l10) * 100)}%` : "—"} ·{" "}
+                    {yesNo ? <>chance {r.data?.p_btts != null ? `${Math.round(Number(r.data.p_btts) * 100)}%` : "—"}</>
+                      : <>proj. {r.projection != null ? Number(r.projection).toFixed(1) : "—"}</>}
                     {r.model_prob ? <> · odd justa <b className="text-slate-300">{(1 / Number(r.model_prob)).toFixed(2)}</b></> : null}
                     {r.matchup_grade && <> · matchup <b className="text-slate-300">{r.matchup_grade}</b></>}
                   </p>

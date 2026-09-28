@@ -80,14 +80,25 @@ export function MarketArt({ row, line, side, points, windowLabel, windows, proje
 
       <div style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", gap: 18, background: "#111827",
         border: `2px solid ${side === "over" ? GREEN : RED}`, borderRadius: 22, padding: "18px 30px" }}>
-        <span style={{ fontSize: 30, fontWeight: 900, color: side === "over" ? GREEN : RED }}>{side === "over" ? "MAIS DE" : "MENOS DE"}</span>
-        <span style={{ fontSize: 46, fontWeight: 900 }}>{line}</span>
-        <span style={{ fontSize: 34, fontWeight: 600, color: "#e2e8f0" }}>{row.stat_label}{isMatch ? " (jogo)" : ""}</span>
+        {row.stat_key === "btts" ? (
+          <>
+            <span style={{ fontSize: 34, fontWeight: 600, color: "#e2e8f0" }}>{row.stat_label}</span>
+            <span style={{ fontSize: 46, fontWeight: 900, color: side === "over" ? GREEN : RED }}>{side === "over" ? "SIM" : "NÃO"}</span>
+          </>
+        ) : (
+          <>
+            <span style={{ fontSize: 30, fontWeight: 900, color: side === "over" ? GREEN : RED }}>{side === "over" ? "MAIS DE" : "MENOS DE"}</span>
+            <span style={{ fontSize: 46, fontWeight: 900 }}>{line}</span>
+            <span style={{ fontSize: 34, fontWeight: 600, color: "#e2e8f0" }}>{row.stat_label}{isMatch ? " (jogo)" : ""}</span>
+          </>
+        )}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 18 }}>
         {[
-          ["PROJEÇÃO", projection != null ? projection.toFixed(1) : "—", projection != null ? `${projection >= line ? "+" : ""}${(projection - line).toFixed(1)}` : ""],
+          row.stat_key === "btts"
+            ? ["CHANCE", row.data?.p_btts != null ? `${Math.round(Number(row.data.p_btts) * 100)}%` : "—", "ambas marcam"]
+            : ["PROJEÇÃO", projection != null ? projection.toFixed(1) : "—", projection != null ? `${projection >= line ? "+" : ""}${(projection - line).toFixed(1)}` : ""],
           ["BATEU", pct(hits, pts.length), `${hits} de ${pts.length} · ${windowLabel}`],
           ["SCORE", String(score), `chance ${Math.round(chance * 100)}%`],
           ["MATCHUP", grade ?? "—", grade ? (grade <= "B" ? "favorável" : grade === "C" ? "neutro" : "difícil") : ""],

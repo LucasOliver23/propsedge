@@ -15,7 +15,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 from db import connect
-from engine.team_score import book_line, ewma, grade, rate, score, stdev
+from engine.team_score import book_line, btts_mu, ewma, grade, poisson_match, rate, score, stdev
 from jobs.common import log
 
 PICK_MIN_SCORE = 65
@@ -81,14 +81,15 @@ def _allowed(rows: list[dict], key: str) -> float | None:
     return sum(vals) / len(vals) if len(vals) >= 3 else None
 
 
-def _match_series(rows_h: list[dict], rows_a: list[dict], key: str, away_id: int, h_abbr: str, a_abbr: str) -> dict:
+def _match_series(rows_h: list[dict], rows_a: list[dict], key: str, away_id: int, h_abbr: str, a_abbr: str,
+                  combine=lambda a, b: a + b) -> dict:
     def totals(rows, own_abbr, home_side):
         out = []
         for r in rows:
             a, b = _num(r["s_for"], key), _num(r["s_against"], key)
             if a is None or b is None:
                 continue
-            out.append({"v": a + b, "d": r["game_date"].isoformat(), "g": r["game_id"],
+            out.append({"v": combine(a, b), "d": r["game_date"].isoformat(), "g": r["game_id"],
                         "o": f"{own_abbr} x {r['opp_abbr']}" if r["is_home"] else f"{r['opp_abbr']} x {own_abbr}",
                         "h": r["is_home"], "vs": r["opponent_team_id"], "side": home_side})
         return out
@@ -110,12 +111,14 @@ def _match_series(rows_h: list[dict], rows_a: list[dict], key: str, away_id: int
     }
 
 
-def _analyse(series: dict, projection: float | None, factor: float | None) -> dict | None:
+def _analyse(series: dict, projection: float | None, factor: float | None,
+             fixed_line: float | None = None) -> dict | None:
     l20 = [x["v"] for x in series["l20"]]
     if len(l20) < MIN_GAMES or projection is None:
         return None
     sd = stdev(l20)
-    line = book_line(projection, sd)   # linha realista (~odd 1.85), não a "fácil"
+    # linha realista (~odd 1.85), não a "fácil"; mercados sim/não (ambas marcam) usam 0.5 fixo
+    line = fixed_line if fixed_line is not None else book_line(projection, sd)
     vals = {"l20": l20, "h2h": [x["v"] for x in series["h2h"]], "venue": [x["v"] for x in series["venue"]],
             "season": series["season"]}
     best = None
@@ -131,7 +134,7 @@ def _analyse(series: dict, projection: float | None, factor: float | None) -> di
 
 def run() -> None:
     now = datetime.now(timezone.utc)
-    rows_out, picks = [], []
+    rows_out, picks, preds = [], [], []
     with connect() as conn, conn.cursor() as cur:
         cur.execute(GAMES_SQL)
         games = cur.fetchall()
@@ -162,7 +165,10 @@ def run() -> None:
             rows_h, rows_a = history(g["home_team_id"], before), history(g["away_team_id"], before)
             lg_key = g["league"] or sport
 
+            goal_proj = None
             for key in markets[sport]:
+                if key == "btts":
+                    continue           # calculado abaixo a partir dos gols projetados
                 lavg = league_avg[sport].get((lg_key, key))
                 subjects = []
                 for subject, team_id, rows, opp_rows, opp_id, at_home in (
@@ -184,6 +190,9 @@ def run() -> None:
                         s.update({"allowed_avg": allowed, "league_avg": lavg, "sd": res["sd"]})
                         rows_out.append((g["id"], subject, key, team_id, res, proj, factor, s))
 
+                if key == "goals" and all(subjects):
+                    goal_proj = (subjects[0][0], subjects[1][0])
+
                 # jogo (soma dos dois)
                 if all(subjects):
                     ms = _match_series(rows_h, rows_a, key, g["away_team_id"], g["home_abbr"] or "CASA",
@@ -196,6 +205,22 @@ def run() -> None:
                         ms.update({"home_avg": round(subjects[0][0], 2), "away_avg": round(subjects[1][0], 2),
                                    "league_avg": (lavg * 2) if lavg else None, "sd": res["sd"]})
                         rows_out.append((g["id"], "match", key, None, res, proj, factor, ms))
+
+            # futebol: 1X2 / over / ambas marcam pelos gols esperados (Poisson)
+            if sport == "soccer" and goal_proj:
+                lh, la = goal_proj
+                pm = poisson_match(lh, la)
+                preds.append((g["id"], sport, round(lh, 3), round(la, 3), round(pm["home"], 4), round(pm["draw"], 4),
+                               round(pm["away"], 4), round(pm["over15"], 4), round(pm["over25"], 4),
+                               round(pm["btts"], 4)))
+                ms = _match_series(rows_h, rows_a, "goals", g["away_team_id"], g["home_abbr"] or "CASA",
+                                   g["away_abbr"] or "FORA", combine=lambda a, b: float(a > 0 and b > 0))
+                mu = btts_mu(pm["btts"])
+                res = _analyse(ms, mu, None, fixed_line=0.5)
+                if res:
+                    ms.update({"home_avg": round(lh, 2), "away_avg": round(la, 2), "p_btts": round(pm["btts"], 4),
+                               "sd": res["sd"]})
+                    rows_out.append((g["id"], "match", "btts", None, res, mu, None, ms))
 
             if g["start_time"] - now < timedelta(hours=24):
                 for (gid, subject, key, team_id, res, *_rest) in [r for r in rows_out if r[0] == g["id"]]:
@@ -216,6 +241,17 @@ def run() -> None:
               r["grade"], round(f, 4) if f is not None else None, json.dumps(data, default=str))
              for gid, subj, key, tid, r, proj, f, data in rows_out],
         )
+        if preds:
+            cur.executemany(
+                """insert into game_predictions (game_id, sport_id, lambda_home, lambda_away, p_home, p_draw, p_away,
+                                                 p_over15, p_over25, p_btts, computed_at)
+                   values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, now())
+                   on conflict (game_id) do update set
+                     lambda_home=excluded.lambda_home, lambda_away=excluded.lambda_away, p_home=excluded.p_home,
+                     p_draw=excluded.p_draw, p_away=excluded.p_away, p_over15=excluded.p_over15,
+                     p_over25=excluded.p_over25, p_btts=excluded.p_btts, computed_at=now()""",
+                preds,
+            )
         if picks:
             cur.executemany(
                 """insert into team_picks (game_id, subject, team_id, stat_key, side, line, score, model_prob)
@@ -223,4 +259,5 @@ def run() -> None:
                 picks,
             )
         conn.commit()
-    log.info("mercados de time: %d análises, %d picks (score >= %d)", len(rows_out), len(picks), PICK_MIN_SCORE)
+    log.info("mercados de time: %d análises, %d previsões 1X2, %d picks (score >= %d)",
+             len(rows_out), len(preds), len(picks), PICK_MIN_SCORE)

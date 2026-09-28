@@ -29,3 +29,10 @@ export function hitRate(hits: number | null, n: number | null) {
   if (hits == null || !n) return null;
   return hits / n;
 }
+
+/** Texto da aposta: "Mais 2.5 Gols" ou, em mercado sim/não, "Ambas marcam: Sim" */
+export function betText(statKey: string, side: "over" | "under", line: number, label: string | null, long = false) {
+  if (statKey === "btts") return `Ambas marcam: ${side === "over" ? "Sim" : "Não"}`;
+  const s = side === "over" ? (long ? "Mais de" : "Mais") : long ? "Menos de" : "Menos";
+  return `${s} ${line} ${label ?? statKey}`;
+}

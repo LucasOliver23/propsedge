@@ -48,6 +48,10 @@ export interface PropRow {
   fair_prob: number | null;
   books: BookOdds[] | null;  // null => plano free
   computed_at: string;
+  line_source: "book" | "model";      // model = linha do PropsEdge (sem odd de casa)
+  injury_status: string | null;        // Out, Questionable, 15-Day-IL...
+  injury_detail: string | null;
+  confirmed_starter: boolean;          // titular confirmado / arremessador provável
 }
 
 /** Linha da view `v_my_bets` */
@@ -113,6 +117,7 @@ export interface TeamSeries {
   away_avg?: number;
   home_l10?: number[];
   away_l10?: number[];
+  p_btts?: number;             // só em "Ambas marcam"
 }
 
 /** Linha da view `v_team_board` */
@@ -148,6 +153,8 @@ export interface TeamMarketRow {
   away_name: string;
   away_abbr: string | null;
   away_logo: string | null;
+  home_rank: number | null;
+  away_rank: number | null;
 }
 
 export interface PickRecapRow {
@@ -159,4 +166,66 @@ export interface PickRecapRow {
   entries: number;
   greens: number;
   reds: number;
+}
+
+// ---------------------------------------------------------------- tendências / previsões
+export interface LeagueTrend {
+  league: string;
+  games: number;
+  goals_avg: number; over15: number; over25: number; over35: number; btts: number;
+  home_win: number; draw: number; away_win: number; ht_over05: number | null;
+  corners_avg: number | null; corners_o85: number | null; corners_o95: number | null; corners_o105: number | null;
+  cards_avg: number | null; cards_o35: number | null; cards_o45: number | null;
+}
+
+export interface TeamTrend {
+  team_id: number; team_name: string; team_abbr: string | null; team_logo: string | null; league: string | null;
+  games: number; gf_avg: number; ga_avg: number; over15: number; over25: number; btts: number;
+  clean_sheet: number; failed_to_score: number; corners_avg: number | null; corners_o95: number | null;
+  cards_avg: number | null; over25_home: number | null; over25_away: number | null;
+  btts_home: number | null; btts_away: number | null; form: string | null;
+}
+
+export interface GamePrediction {
+  game_id: number; sport_id: SportId; start_time: string; game_status: GameStatus; league_slug: string | null;
+  lambda_home: number; lambda_away: number; p_home: number; p_draw: number; p_away: number;
+  p_over15: number; p_over25: number; p_btts: number;
+  home_team_id: number; home_name: string; home_abbr: string | null; home_logo: string | null;
+  away_team_id: number; away_name: string; away_abbr: string | null; away_logo: string | null;
+  home_rank: number | null; away_rank: number | null;
+}
+
+export interface StandingRow {
+  league: string; group_name: string | null; rank: number | null; team_id: number; team_name: string;
+  team_abbr: string | null; team_logo: string | null; played: number | null; wins: number | null;
+  draws: number | null; losses: number | null; goals_for: number | null; goals_against: number | null;
+  goal_diff: number | null; points: number | null;
+}
+
+export interface InjuryRow {
+  sport_id: SportId; team_id: number | null; team_name: string | null; team_abbr: string | null;
+  player_id: number | null; name: string; position: string | null; status: string; detail: string | null;
+  return_date: string | null;
+}
+
+// ---------------------------------------------------------------- ao vivo
+export interface LiveTeamState {
+  pressure: number; window: number; minute: number | null;
+  shots: number; sot: number; corners: number; possession: number;
+}
+
+export interface LiveGameRow {
+  game_id: number; sport_id: SportId; start_time: string; status: GameStatus; period: string | null;
+  clock: string | null; home_score: number | null; away_score: number | null; league_slug: string | null;
+  home_name: string; home_abbr: string | null; home_logo: string | null;
+  away_name: string; away_abbr: string | null; away_logo: string | null;
+  minute: number | null; home_pressure: number | null; away_pressure: number | null;
+  data: { home?: LiveTeamState; away?: LiveTeamState } | null; updated_at: string | null;
+}
+
+export interface LiveAlertRow {
+  id: number; game_id: number; rule: string; title: string; message: string; market: string | null;
+  minute: number | null; created_at: string; game_status: GameStatus; home_score: number | null;
+  away_score: number | null; clock: string | null; home_name: string; home_abbr: string | null;
+  away_name: string; away_abbr: string | null; league_slug: string | null;
 }

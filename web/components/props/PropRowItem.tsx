@@ -27,6 +27,9 @@ interface Props {
 function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin }: Props) {
   const started = row.game_status !== "scheduled";
   const isEv = row.ev != null && row.ev >= 0.03;
+  const isModel = row.line_source === "model";
+  const fairOdd = row.model_prob ? 1 / Number(row.model_prob) : null;
+  const inj = row.injury_status;
 
   return (
     <li className={clsx("border-b border-line/70 last:border-0", expanded && "bg-white/[0.02]")}>
@@ -56,6 +59,8 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
             <p className="truncate font-semibold text-slate-100">
               {row.player_name}
               {row.player_status === "questionable" && <span className="ml-1 text-xs text-amber-300">(Q)</span>}
+              {row.confirmed_starter && <span className="ml-1 rounded bg-emerald-500/15 px-1 text-[10px] font-bold text-emerald-300" title="Titular confirmado / arremessador provável">TIT</span>}
+              {inj && <span className="ml-1 rounded bg-amber-500/15 px-1 text-[10px] font-bold text-amber-300" title={row.injury_detail ?? inj}>{inj}</span>}
             </p>
             <p className="truncate text-xs text-slate-400">
               {row.position ?? ""} · {row.team_abbr} {row.is_home ? "vs" : "@"} {row.opp_abbr} · {kickoff(row.start_time)}
@@ -75,6 +80,9 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
           </span>
           <span className="font-semibold tabular-nums text-slate-100">{row.line}</span>
           <span className="truncate text-sm text-slate-400">{row.stat_label ?? row.stat_key}</span>
+          {isModel && (
+            <span className="shrink-0 rounded bg-sky-500/15 px-1 text-[10px] font-bold uppercase text-sky-300" title="Linha calculada pelo PropsEdge (sem odd de casa)">modelo</span>
+          )}
         </div>
 
         {/* L5 / L10 / L20 / H2H */}
@@ -90,11 +98,22 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
           <div className="flex justify-center"><DvpBadge rank={row.dvp_rank} factor={row.dvp_factor} /></div>
           <ConfidenceBar value={row.confidence} />
           <div className="text-right leading-tight">
-            <p className="font-semibold tabular-nums text-slate-100">{fmtOdds(row.best_odds)}</p>
-            <p className="text-[11px] text-slate-500">{row.best_book ? BOOK_LABELS[row.best_book] ?? row.best_book : ""}</p>
+            {isModel ? (
+              <>
+                <p className="font-semibold tabular-nums text-sky-200">{fmtOdds(fairOdd)}</p>
+                <p className="text-[11px] text-slate-500">odd justa</p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold tabular-nums text-slate-100">{fmtOdds(row.best_odds)}</p>
+                <p className="text-[11px] text-slate-500">{row.best_book ? BOOK_LABELS[row.best_book] ?? row.best_book : ""}</p>
+              </>
+            )}
           </div>
           <div className="text-right">
-            {row.ev == null ? (
+            {isModel ? (
+              <span className="text-xs text-slate-600" title="Sem odd de casa não há EV">—</span>
+            ) : row.ev == null ? (
               <span className="text-xs text-slate-600">Pro</span>
             ) : (
               <span
@@ -116,7 +135,19 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
       {expanded && (
         <div className="grid gap-6 px-4 pb-5 pt-1 md:grid-cols-[1.6fr_1fr_1fr]">
           <L10Chart values={row.l10_values} opponents={row.l10_opps} line={row.line} side={row.side} />
-          <OddsComparison books={row.books} line={row.line} fairProb={row.fair_prob} />
+          {isModel ? (
+            <div className="rounded-xl border border-line bg-bg/40 p-4 text-sm text-slate-300">
+              <p className="font-semibold text-slate-100">Linha do modelo</p>
+              <p className="mt-1 text-xs text-slate-400">
+                Sem odd de casa para esse mercado agora. A linha {row.line} é a que o modelo considera ~50/50 e a
+                odd justa do lado {row.side === "over" ? "Mais" : "Menos"} é <b className="text-sky-200">{fmtOdds(fairOdd)}</b>.
+                Se a sua casa pagar acima disso, há valor.
+              </p>
+              {inj && <p className="mt-2 text-xs text-amber-300">⚠ {inj}{row.injury_detail ? ` · ${row.injury_detail}` : ""}</p>}
+            </div>
+          ) : (
+            <OddsComparison books={row.books} line={row.line} fairProb={row.fair_prob} />
+          )}
           <dl className="grid grid-cols-2 content-start gap-x-4 gap-y-3 text-sm">
             <Stat label="Média temporada" value={row.season_avg?.toFixed(1)} />
             <Stat label="Projeção" value={row.proj_mean?.toFixed(1)} icon />

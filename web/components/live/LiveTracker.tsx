@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { CheckCircle2, Radio, XCircle } from "lucide-react";
 import { useTrackedBets } from "@/hooks/useTrackedBets";
 import { getSupabase } from "@/lib/supabase/client";
-import { brl } from "@/lib/format";
+import { betText, brl } from "@/lib/format";
 import type { TrackedBet } from "@/lib/types";
 
 type LiveStats = Record<string, Record<string, number>>;            // `${game}:${player}` -> stats
@@ -102,7 +102,7 @@ export function LiveTracker() {
                   {b.status === "green" ? <CheckCircle2 className="h-4 w-4 text-emerald-400" /> :
                    b.status === "red" ? <XCircle className="h-4 w-4 text-rose-400" /> :
                    <span className="h-4 w-4 rounded-full bg-slate-600" />}
-                  {b.player_name} · {b.side === "over" ? "Mais" : "Menos"} {b.line} {b.stat_label}
+                  {b.player_name} · {betText(b.stat_key, b.side, b.line, b.stat_label)}
                 </span>
                 <span className="tabular-nums text-slate-400">
                   {b.result_value ?? "—"} ·{" "}
@@ -132,7 +132,7 @@ function LiveCard({ bet, current, game, flash }: { bet: TrackedBet; current: num
         <div>
           <p className="font-semibold text-slate-100">{bet.player_name}</p>
           <p className="text-xs text-slate-400">
-            {bet.side === "over" ? "Mais de" : "Menos de"} {bet.line} {bet.stat_label ?? bet.stat_key} · @{Number(bet.odds).toFixed(2)}
+            {betText(bet.stat_key, bet.side, bet.line, bet.stat_label, true)} · @{Number(bet.odds).toFixed(2)}
           </p>
         </div>
         <span className={clsx("rounded-md px-2 py-0.5 text-[11px] font-bold uppercase",

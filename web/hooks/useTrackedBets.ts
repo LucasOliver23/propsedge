@@ -65,6 +65,15 @@ export function useTrackedBets() {
     if (user) await load(user.id);
   }, [supabase, user, load]);
 
+  /** Fixa prop com linha do modelo (sem odd de casa): usa a odd justa ou a odd que o usuário informar */
+  const trackModel = useCallback(async (marketId: number, side: Side, stake?: number, odds?: number) => {
+    const { error } = await supabase.rpc("track_prop_model", {
+      p_market_id: marketId, p_side: side, p_odds: odds ?? null, p_stake: stake ?? null,
+    });
+    if (error) throw new Error(rpcErrorMessage(error.message));
+    if (user) await load(user.id);
+  }, [supabase, user, load]);
+
   /** Fixa mercado de time/jogo com a odd que o usuário encontrou na casa dele */
   const trackTeam = useCallback(async (args: {
     gameId: number; kind: "team" | "match"; teamId: number | null; statKey: string;
@@ -86,5 +95,5 @@ export function useTrackedBets() {
     if (user) await load(user.id);
   }, [supabase, user, load]);
 
-  return { user, profile, bets, pinned, ready, track, trackTeam, untrack, reload };
+  return { user, profile, bets, pinned, ready, track, trackModel, trackTeam, untrack, reload };
 }

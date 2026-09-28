@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { Activity, LayoutGrid, Shield, Ticket, Trophy } from "lucide-react";
+import { Activity, BarChart3, LayoutGrid, Shield, Ticket, Trophy } from "lucide-react";
 
 const LINKS = [
   { href: "/props", label: "Jogadores", icon: LayoutGrid },
   { href: "/times", label: "Times & Jogos", icon: Shield },
+  { href: "/tendencias", label: "Tendências", icon: BarChart3 },
   { href: "/live", label: "Ao vivo", icon: Activity },
   { href: "/bets", label: "Bilheteira", icon: Ticket },
   { href: "/resultados", label: "Resultados", icon: Trophy },
@@ -21,7 +22,7 @@ export function Navbar() {
         <Link href="/props" className="text-lg font-black tracking-tight text-slate-100">
           Props<span className="text-sky-400">Edge</span>
         </Link>
-        <nav className="flex gap-1">
+        <nav className="flex gap-1 overflow-x-auto">
           {LINKS.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}

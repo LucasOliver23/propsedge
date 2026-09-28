@@ -62,7 +62,7 @@ def _poll_game(g: dict) -> None:
 
 def _periodic_jobs(sports: list[str]) -> None:
     """Modo 'tudo em um' (RUN_ALL_JOBS=1): substitui os crons do GitHub Actions num único processo."""
-    from jobs import compute_analytics, sync_schedule
+    from jobs import compute_analytics, model_props, sync_context, sync_schedule
     from run import _odds
     last_sched = last_pipe = 0.0
     while _running:
@@ -70,9 +70,11 @@ def _periodic_jobs(sports: list[str]) -> None:
         try:
             if now - last_sched > 3 * 3600:
                 sync_schedule.run(list(SPORTS))
+                sync_context.run(list(SPORTS))
                 last_sched = now
             if now - last_pipe > 30 * 60:
                 _odds(list(SPORTS))
+                model_props.run(list(SPORTS))
                 compute_analytics.run()
                 from jobs import compute_team_analytics
                 compute_team_analytics.run()
@@ -90,6 +92,7 @@ def run() -> None:
     if os.getenv("RUN_ALL_JOBS") == "1":
         threading.Thread(target=_periodic_jobs, args=(sports,), daemon=True).start()
         log.info("modo tudo-em-um: agenda (3h) e odds+análise (30min) rodando neste processo")
+    cycles = 0
     with ThreadPoolExecutor(max_workers=8) as pool:
         while _running:
             started = time.monotonic()
@@ -100,6 +103,10 @@ def run() -> None:
                 list(pool.map(_poll_game, games))
                 if games:
                     log.info("live: %d jogos atualizados", len(games))
+                    cycles += 1
+                    if cycles % 3 == 0:          # pressão/alertas a cada ~1 min
+                        from jobs import live_alerts
+                        live_alerts.run()
             except Exception:
                 log.exception("erro no ciclo live")
             time.sleep(max(1.0, LIVE_POLL_SECONDS - (time.monotonic() - started)))

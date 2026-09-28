@@ -24,6 +24,20 @@ def provider_for(sport_id: str) -> StatsProvider:
     return _cache[kind]
 
 
+def parse_minute(clock: str | None) -> float | None:
+    """Relógio do futebol no ESPN: "67'", "45'+2'", "90'+5'", "67:12" -> minuto de jogo."""
+    if not clock:
+        return None
+    total, found = 0.0, False
+    for part in str(clock).split("+"):
+        part = part.split(":")[0]
+        digits = "".join(ch for ch in part if ch.isdigit())
+        if digits:
+            total += float(digits)
+            found = True
+    return total if found else None
+
+
 def upsert_game(conn, g: NGame, ext_key: str) -> int:
     ext = json.dumps({ext_key: g.ext_id, **{k: str(v) for k, v in g.meta.items()}})
     home = get_or_create_team(conn, g.sport_id, g.home_name, g.home_abbr, ext_key, g.home_ext, g.home_logo)
@@ -91,6 +105,15 @@ def save_boxscore(conn, sport_id: str, game_id: int, box: NBoxScore, ext_key: st
                                "sport_id": sport_id, "opponent_team_id": opp_id,
                                "is_home": team_id == g["home_team_id"], "stats": tl.stats})
     upsert(conn, "live_team_stats", live_team, conflict=("game_id", "team_id"))
+    # foto das estatísticas (futebol ao vivo) -> índice de pressão e alertas (jobs/live_alerts.py)
+    if sport_id == "soccer" and not box.complete and box.game.status == "live" and live_team:
+        minute = parse_minute(box.game.clock)
+        with conn.cursor() as cur:
+            cur.executemany(
+                """insert into live_team_snapshots (game_id, team_id, minute, stats)
+                   values (%s,%s,%s,%s::jsonb) on conflict do nothing""",
+                [(r["game_id"], r["team_id"], minute, json.dumps(r["stats"])) for r in live_team],
+            )
     if final_team:
         upsert(conn, "team_game_stats", final_team, conflict=("team_id", "game_id"))
 

@@ -17,7 +17,7 @@ const PAGE = 60;
 export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }) {
   const router = useRouter();
   const { rows, loading, error, updatedAt, reload } = usePropsBoard(initialRows);
-  const { user, profile, pinned, track } = useTrackedBets();
+  const { user, profile, pinned, track, trackModel } = useTrackedBets();
 
   // ---------------------------------------------------------------- filtros
   const [sport, setSport] = useState<SportId | "all">("all");
@@ -77,17 +77,19 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
   }, [base, sport, stat, minConf, evOnly, search, sort]);
 
   const evCount = useMemo(() => base.filter((r) => (r.ev ?? -1) >= 0.03).length, [base]);
+  const modelCount = useMemo(() => base.filter((r) => r.line_source === "model").length, [base]);
   const isPremium = profile ? profile.plan !== "free" : false;
 
   const handlePin = useCallback(
-    async (marketId: number, side: Side, stake: number) => {
+    async (marketId: number, side: Side, stake: number, model: boolean) => {
       if (!user) {
         router.push("/login?next=/props");
         throw new Error("Entre na sua conta para fixar props.");
       }
-      await track(marketId, side, stake);
+      if (model) await trackModel(marketId, side, stake);   // sem odd de casa: odd justa do modelo
+      else await track(marketId, side, stake);
     },
-    [user, router, track],
+    [user, router, track, trackModel],
   );
 
   // ---------------------------------------------------------------- render
@@ -113,6 +115,13 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
           value={profile ? brl(Number(profile.bankroll)) : "—"}
         />
       </section>
+
+      {modelCount > 0 && (
+        <p className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-4 py-2.5 text-xs text-sky-200">
+          <b>{modelCount}</b> props estão com <b>linha do modelo</b> (sem odd de casa no momento): a linha é a que o PropsEdge
+          calcula como ~50/50 e a odd mostrada é a <b>odd justa</b>. Compare com a odd da sua casa antes de entrar.
+        </p>
+      )}
 
       {/* Esportes */}
       <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Esportes">
@@ -206,7 +215,9 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         {error && <p className="p-6 text-sm text-rose-300">Erro ao carregar: {error}</p>}
         {loading && !rows.length && <SkeletonRows />}
         {!loading && !filtered.length && (
-          <p className="p-10 text-center text-sm text-slate-400">Nenhuma prop com esses filtros.</p>
+          <p className="p-10 text-center text-sm text-slate-400">
+            {rows.length ? "Nenhuma prop com esses filtros." : "Nenhuma prop para as próximas 36h ainda — as props são geradas a cada 15 min conforme a agenda."}
+          </p>
         )}
 
         <ul>
@@ -220,7 +231,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
                 pinned={pinned.has(key)}
                 defaultStake={Number(profile?.unit_size ?? 10)}
                 onToggle={() => setExpanded((e) => (e === key ? null : key))}
-                onPin={(stake) => handlePin(r.market_id, r.side, stake)}
+                onPin={(stake) => handlePin(r.market_id, r.side, stake, r.line_source === "model")}
               />
             );
           })}

@@ -113,3 +113,40 @@ def score(series: dict[str, Sequence[float]], line: float, side: str, projection
 
 def stdev(vals: Sequence[float]) -> float:
     return pstdev(vals) if len(vals) > 1 else (mean(vals) * 0.3 if vals else 0.0)
+
+
+def _pois_pmf(k: int, lam: float) -> float:
+    return math.exp(-lam) * lam ** k / math.factorial(k)
+
+
+def poisson_match(lam_home: float, lam_away: float, max_goals: int = 10) -> dict[str, float]:
+    """Probabilidades do jogo a partir dos gols esperados de cada time (Poisson independente):
+    1X2, over 1.5/2.5 e ambas marcam."""
+    lh, la = max(lam_home, 0.01), max(lam_away, 0.01)
+    ph = [_pois_pmf(k, lh) for k in range(max_goals + 1)]
+    pa = [_pois_pmf(k, la) for k in range(max_goals + 1)]
+    home = draw = away = le1 = le2 = 0.0
+    for i, x in enumerate(ph):
+        for j, y in enumerate(pa):
+            p = x * y
+            if i > j:
+                home += p
+            elif i == j:
+                draw += p
+            else:
+                away += p
+            if i + j <= 1:
+                le1 += p
+            if i + j <= 2:
+                le2 += p
+    tot = home + draw + away
+    return {"home": home / tot, "draw": draw / tot, "away": away / tot,
+            "over15": 1 - le1 / tot, "over25": 1 - le2 / tot,
+            "btts": (1 - math.exp(-lh)) * (1 - math.exp(-la))}
+
+
+def btts_mu(p_btts: float) -> float:
+    """'Projeção' equivalente para o mercado sim/não: P(X > 0.5) = 1 - e^-mu = p  =>  mu = -ln(1-p).
+    Assim o mesmo motor (e o recálculo no site) funciona com linha fixa 0.5."""
+    p = min(max(p_btts, 0.01), 0.99)
+    return -math.log(1 - p)
