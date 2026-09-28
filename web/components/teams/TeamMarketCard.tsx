@@ -8,6 +8,8 @@ import { kickoff, signedPct } from "@/lib/format";
 import { ev as calcEv, grade as calcGrade, hitRate, teamScore } from "@/lib/teamEngine";
 import type { SeriesPoint, Side, TeamMarketRow } from "@/lib/types";
 import { GradeBadge, ScoreRing, SeriesChart, TeamLogo } from "./Widgets";
+import { ShareButton } from "@/components/share/ShareButton";
+import { MarketArt } from "@/components/share/ShareArt";
 
 type Win = "l5" | "l10" | "l20" | "h2h" | "venue" | "season";
 
@@ -183,6 +185,20 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pin className="h-4 w-4" />} Fixar
         </button>
         {msg && <p className={clsx("w-full text-xs", msg.ok ? "text-emerald-300" : "text-rose-300")}>{msg.text}</p>}
+        <div className="flex w-full items-center justify-between border-t border-line pt-3">
+          <span className="text-xs text-slate-500">Imagem para Instagram (com a linha e a janela escolhidas)</span>
+          <ShareButton
+            filename={`propsedge-${(isMatch ? `${row.home_abbr}-${row.away_abbr}` : row.team_abbr ?? "time")}-${row.stat_key}-${line}`.toLowerCase()}
+            render={(format) => (
+              <MarketArt row={row} line={line} side={side} points={win === "season" ? (d.l20 ?? []).slice(0, 10) : cur.pts.slice(0, 10)}
+                windowLabel={cur.label} projection={projection} score={score} chance={prob} grade={grade} format={format}
+                windows={(Object.keys(windows) as Win[]).map((k) => {
+                  const r = hitRate(windows[k].vals, line, side);
+                  return { label: windows[k].label, hits: r.hits, n: r.n };
+                })} />
+            )}
+          />
+        </div>
       </div>
     </div>
   );

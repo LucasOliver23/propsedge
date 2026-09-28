@@ -6,6 +6,8 @@ import { Trophy } from "lucide-react";
 import { getSupabase } from "@/lib/supabase/client";
 import { SPORTS } from "@/lib/constants";
 import type { PickRecapRow } from "@/lib/types";
+import { ShareButton } from "@/components/share/ShareButton";
+import { RecapArt } from "@/components/share/ShareArt";
 
 const SUBJECT_LABEL: Record<string, string> = { home: "Mandante", away: "Visitante", match: "Jogo" };
 
@@ -59,6 +61,12 @@ export function RoundRecap() {
     <div className="mx-auto max-w-5xl space-y-5 px-4 py-6">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="mr-auto text-lg font-bold text-white">Resultados da rodada</h1>
+        {day && total > 0 && (
+          <ShareButton filename={`propsedge-rodada-${day}`} render={(format) => (
+            <RecapArt format={format} markets={markets} total={total} greens={greens}
+              dayLabel={new Date(day + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" })} />
+          )} />
+        )}
         <select value={day ?? ""} onChange={(e) => setDay(e.target.value)} className="rounded-lg border border-line bg-bg px-3 py-2 text-sm">
           {days.map((d) => <option key={d} value={d}>{new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" })}</option>)}
         </select>
