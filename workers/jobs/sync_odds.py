@@ -44,7 +44,7 @@ def _needs_refresh(game: dict, now: datetime) -> bool:
     return age > timedelta(minutes=ODDS_REFRESH_MINUTES)
 
 
-def run(sports: list[str], horizon_hours: int = 36) -> int:
+def run(sports: list[str], horizon_hours: int = 24) -> int:   # 24h antes do jogo (economiza créditos)
     api = OddsAPI()
     now = datetime.now(timezone.utc)
     queue: list[tuple[datetime, str, str, str, dict, dict[str, str]]] = []
