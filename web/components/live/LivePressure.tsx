@@ -41,7 +41,7 @@ export function LivePressure() {
         soon();
       })
       .subscribe();
-    const poll = setInterval(load, 60_000);   // garantia caso o WebSocket caia
+    const poll = setInterval(load, 20_000);   // garantia caso o WebSocket caia
     return () => { clearTimeout(timer.current); clearInterval(poll); sb.removeChannel(ch); };
   }, [load]);
 
@@ -91,7 +91,7 @@ export function LivePressure() {
         )}
         <p className="mt-2 text-xs text-slate-500">
           Pressão 0-100 = chutes no gol (x3), chutes para fora (x1) e escanteios (x1,5) nos últimos ~15 min.
-          Atualiza a cada 15 min pelo GitHub; com o worker ao vivo ligado, a cada ~1 min.
+          Placar, relógio e estatísticas são atualizados a cada ~30 segundos direto pelo Supabase.
         </p>
       </section>
     </div>
