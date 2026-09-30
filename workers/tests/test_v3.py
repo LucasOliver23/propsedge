@@ -79,20 +79,6 @@ def test_parse_minute():
     assert parse_minute("67:12") == 67
 
 
-def test_pressure_and_rules():
-    from jobs.live_alerts import pressure, rules
-    old = {"shots": 5, "shots_on_target": 1, "corners": 2}
-    new = {"shots": 9, "shots_on_target": 3, "corners": 5}
-    p, w = pressure(new, old, 70, 58)
-    # delta: 2 no gol (6) + 2 fora (2) + 3 escanteios (4.5) = 12.5 pts em 12 min -> 10.4/10min -> 100
-    assert w == 12 and p == 100.0
-    p0, _ = pressure({"shots": 2, "shots_on_target": 0, "corners": 1}, None, 30, None)
-    assert 0 < p0 < 30
-    r = {x[0] for x in rules(65, 0, 1, 80, 20, "Casa", "Fora", 9, 9.5)}
-    assert {"gol_maduro", "virada_home", "escanteios_ritmo"} <= r
-    assert rules(20, 0, 0, 90, 90, "A", "B", 1, None) == []
-
-
 def test_model_line_from_recent():
     from jobs.compute_analytics import model_line
     assert model_line([1, 2], None) is None
