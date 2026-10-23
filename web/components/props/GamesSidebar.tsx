@@ -100,13 +100,20 @@ export function GamesSidebar({
   );
 }
 
+// Mesmo fuso fixo usado em lib/format.ts: evita o mesmo bug de hidratação (erro #425)
+// que já corrigimos uma vez — toLocaleDateString sem timeZone diverge entre o
+// render do servidor (UTC) e o do navegador do usuário.
+const TZ = "America/Sao_Paulo";
+
 function dayLabel(dateKey: string) {
   const today = brDateKey(new Date().toISOString());
   const tomorrow = brDateKey(new Date(Date.now() + 86400000).toISOString());
   if (dateKey === today) return "Hoje";
   if (dateKey === tomorrow) return "Amanhã";
   const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  const weekday = date.toLocaleDateString("pt-BR", { weekday: "long" });
+  // Meio-dia UTC do dia em questão: longe o bastante da meia-noite pra nunca
+  // "vazar" pro dia anterior/seguinte ao formatar em -03:00.
+  const date = new Date(Date.UTC(y, m - 1, d, 12));
+  const weekday = date.toLocaleDateString("pt-BR", { weekday: "long", timeZone: TZ });
   return `${weekday}, ${d}/${m}`;
 }
