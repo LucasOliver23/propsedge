@@ -160,6 +160,14 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
               value={row.dvp_factor == null ? "—" : `${row.dvp_factor > 1 ? "+" : ""}${((row.dvp_factor - 1) * 100).toFixed(0)}% vs média`}
             />
             <Stat label="Atualizado" value={new Date(row.computed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} />
+            <Stat
+              label="Descanso"
+              value={
+                row.team_rest_days == null && row.opp_rest_days == null
+                  ? undefined
+                  : `${row.team_rest_days ?? "—"}d · adv ${row.opp_rest_days ?? "—"}d`
+              }
+            />
           </dl>
           <div className="md:col-span-3">
             <ConfidenceBreakdown row={row} />

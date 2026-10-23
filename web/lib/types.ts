@@ -55,6 +55,8 @@ export interface PropRow {
   batting_order: number | null;        // MLB: posição na ordem de rebatedores (1-9)
   team_injuries: TeammateInjury[] | null;  // desfalques do time do jogador (exclui ele mesmo)
   opp_injuries: TeammateInjury[] | null;   // desfalques do time adversário
+  team_rest_days: number | null;           // dias desde o último jogo do time do jogador
+  opp_rest_days: number | null;            // dias desde o último jogo do adversário
 }
 
 export interface TeammateInjury {
