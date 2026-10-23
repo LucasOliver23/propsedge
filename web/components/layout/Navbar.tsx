@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { Activity, BarChart3, LayoutGrid, Shield, Ticket, Trophy } from "lucide-react";
+import { AccountMenu } from "./AccountMenu";
 
 const LINKS = [
   { href: "/props", label: "Jogadores", icon: LayoutGrid },
@@ -40,6 +41,7 @@ export function Navbar() {
             );
           })}
         </nav>
+        <AccountMenu />
       </div>
     </header>
   );

@@ -12,16 +12,28 @@ import type { PropRow, Side, SportId } from "@/lib/types";
 import { MultiplesBar } from "./MultiplesBar";
 import { GRID, PropRowItem } from "./PropRowItem";
 
-type SortKey = "confidence" | "ev" | "l10" | "time";
+type SortKey = "confidence" | "ev" | "l10" | "time" | "score";
 const PAGE = 60;
 
-/** Atalhos de uma rankeada pronta, no estilo das abas do PropsBR (10 Melhores,
- * Top Confiança, Top Vantagem...). Cada um só ajusta sort/minConf/evOnly —
- * os filtros avançados continuam disponíveis para afinar depois. */
+/** Score composto (estilo "Top Score" do PropsBR): mistura confiança, sequência
+ * recente (L10) e vantagem (EV) num único número 0-100. É uma primeira versão —
+ * os pesos abaixo podem ser ajustados depois de validar com o usuário. */
+function propScore(r: PropRow): number {
+  const l10 = r.l10_n ? (r.l10_hits ?? 0) / r.l10_n : 0.5;
+  const evNorm = Math.max(0, Math.min(1, ((r.ev ?? 0) + 0.05) / 0.2));
+  return r.confidence * 0.55 + l10 * 100 * 0.3 + evNorm * 100 * 0.15;
+}
+
+/** Atalhos de uma rankeada pronta, no estilo das abas do PropsBR (Melhor do dia,
+ * 10 Melhores, Top Confiança, Top Vantagem, Top Score, Oportunidades, Múltiplas).
+ * Cada um só ajusta sort/minConf/evOnly/limit — os filtros avançados continuam
+ * disponíveis para afinar depois. */
 const PRESETS = [
   { key: "melhor", label: "Melhor do dia", sort: "confidence" as SortKey, minConf: 0, evOnly: false },
+  { key: "melhores", label: "10 Melhores", sort: "confidence" as SortKey, minConf: 0, evOnly: false, limit: 10 },
   { key: "confianca", label: "Top Confiança", sort: "confidence" as SortKey, minConf: 70, evOnly: false },
   { key: "vantagem", label: "Top Vantagem", sort: "ev" as SortKey, minConf: 0, evOnly: true, pro: true },
+  { key: "score", label: "Top Score", sort: "score" as SortKey, minConf: 0, evOnly: false },
   { key: "quente", label: "Quente (L10)", sort: "l10" as SortKey, minConf: 0, evOnly: false },
   { key: "oportunidades", label: "Oportunidades", sort: "ev" as SortKey, minConf: 55, evOnly: false },
 ] as const;
@@ -43,6 +55,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
   const [limit, setLimit] = useState(PAGE);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [multiples, setMultiples] = useState<Map<string, PropRow>>(new Map());
+  const [view, setView] = useState<"board" | "multiplas">("board");
   const search = useDeferredValue(query.trim().toLowerCase());
 
   // Por padrão mostramos só o lado mais forte de cada mercado
@@ -86,9 +99,15 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
       ev: (a, b) => (b.ev ?? -9) - (a.ev ?? -9),
       l10: (a, b) => l10(b) - l10(a),
       time: (a, b) => +new Date(a.start_time) - +new Date(b.start_time),
+      score: (a, b) => propScore(b) - propScore(a),
     };
     return out.sort(sorters[sort]);
   }, [base, sport, stat, minConf, evOnly, search, sort]);
+
+  /** Aba "Múltiplas": em vez de filtrar o board, mostra só as pernas já
+   * selecionadas (igual ao painel "Multiple NBA" do PropsBR). */
+  const multiplasRows = useMemo(() => Array.from(multiples.values()), [multiples]);
+  const visibleRows = view === "multiplas" ? multiplasRows : filtered;
 
   const evCount = useMemo(() => base.filter((r) => (r.ev ?? -1) >= 0.03).length, [base]);
   const modelCount = useMemo(() => base.filter((r) => r.line_source === "model").length, [base]);
@@ -156,17 +175,19 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
               key={p.key}
               disabled={locked}
               onClick={() => {
+                setView("board");
                 setPreset(p.key);
                 setSort(p.sort);
                 setMinConf(p.minConf);
                 setEvOnly(p.evOnly);
+                setLimit("limit" in p ? p.limit : PAGE);
               }}
               title={locked ? "Recurso Pro" : undefined}
               className={clsx(
                 "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
                 locked
                   ? "cursor-not-allowed border-line text-slate-600"
-                  : preset === p.key
+                  : view === "board" && preset === p.key
                     ? "border-brand-400 bg-brand-500/15 text-brand-200"
                     : "border-line text-slate-300 hover:border-slate-500",
               )}
@@ -175,6 +196,17 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
             </button>
           );
         })}
+        <button
+          onClick={() => setView("multiplas")}
+          className={clsx(
+            "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
+            view === "multiplas"
+              ? "border-violet-400 bg-violet-500/15 text-violet-200"
+              : "border-line text-slate-300 hover:border-slate-500",
+          )}
+        >
+          Múltiplas{multiples.size > 0 ? ` (${multiples.size})` : ""}
+        </button>
       </nav>
 
       {/* Esportes */}
@@ -269,14 +301,18 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
 
         {error && <p className="p-6 text-sm text-rose-300">Erro ao carregar: {error}</p>}
         {loading && !rows.length && <SkeletonRows />}
-        {!loading && !filtered.length && (
+        {!loading && !visibleRows.length && (
           <p className="p-10 text-center text-sm text-slate-400">
-            {rows.length ? "Nenhuma prop com esses filtros." : "Nenhuma prop para as próximas 36h ainda — as props são geradas a cada 15 min conforme a agenda."}
+            {view === "multiplas"
+              ? "Nenhuma prop na múltipla ainda — clique no ícone roxo de uma prop para adicionar."
+              : rows.length
+                ? "Nenhuma prop com esses filtros."
+                : "Nenhuma prop para as próximas 36h ainda — as props são geradas a cada 15 min conforme a agenda."}
           </p>
         )}
 
         <ul>
-          {filtered.slice(0, limit).map((r) => {
+          {visibleRows.slice(0, view === "multiplas" ? undefined : limit).map((r) => {
             const key = `${r.market_id}:${r.side}`;
             return (
               <PropRowItem
@@ -294,7 +330,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
           })}
         </ul>
 
-        {filtered.length > limit && (
+        {view === "board" && filtered.length > limit && (
           <button
             onClick={() => setLimit((l) => l + PAGE)}
             className="w-full border-t border-line py-3 text-sm text-brand-300 hover:bg-white/[0.03]"
