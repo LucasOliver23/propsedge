@@ -85,7 +85,7 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin,
           <span className="font-semibold tabular-nums text-slate-100">{row.line}</span>
           <span className="truncate text-sm text-slate-400">{row.stat_label ?? row.stat_key}</span>
           {isModel && (
-            <span className="shrink-0 rounded bg-sky-500/15 px-1 text-[10px] font-bold uppercase text-sky-300" title="Linha calculada pelo PropsEdge (sem odd de casa)">modelo</span>
+            <span className="shrink-0 rounded bg-brand-500/15 px-1 text-[10px] font-bold uppercase text-brand-300" title="Linha calculada pelo PropsEdge (sem odd de casa)">modelo</span>
           )}
         </div>
 
@@ -104,7 +104,7 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin,
           <div className="text-right leading-tight">
             {isModel ? (
               <>
-                <p className="font-semibold tabular-nums text-sky-200">{fmtOdds(fairOdd)}</p>
+                <p className="font-semibold tabular-nums text-brand-200">{fmtOdds(fairOdd)}</p>
                 <p className="text-[11px] text-slate-500">odd justa</p>
               </>
             ) : (
@@ -162,7 +162,7 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin,
               <p className="font-semibold text-slate-100">Linha do modelo</p>
               <p className="mt-1 text-xs text-slate-400">
                 Sem odd de casa para esse mercado agora. A linha {row.line} é a que o modelo considera ~50/50 e a
-                odd justa do lado {row.side === "over" ? "Mais" : "Menos"} é <b className="text-sky-200">{fmtOdds(fairOdd)}</b>.
+                odd justa do lado {row.side === "over" ? "Mais" : "Menos"} é <b className="text-brand-200">{fmtOdds(fairOdd)}</b>.
                 Se a sua casa pagar acima disso, há valor.
               </p>
               {inj && <p className="mt-2 text-xs text-amber-300">⚠ {inj}{row.injury_detail ? ` · ${row.injury_detail}` : ""}</p>}
@@ -211,7 +211,7 @@ function Stat({ label, value, icon }: { label: string; value?: string | null; ic
     <div>
       <dt className="text-xs text-slate-500">{label}</dt>
       <dd className="flex items-center gap-1 font-semibold tabular-nums text-slate-200">
-        {icon && <TrendingUp className="h-3.5 w-3.5 text-sky-300" />}
+        {icon && <TrendingUp className="h-3.5 w-3.5 text-brand-300" />}
         {value ?? "—"}
       </dd>
     </div>

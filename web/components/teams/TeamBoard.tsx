@@ -68,7 +68,7 @@ export function TeamBoard() {
   return (
     <div className="mx-auto max-w-[1200px] space-y-5 px-4 py-6">
       <header className="flex items-center gap-2">
-        <Shield className="h-5 w-5 text-sky-300" />
+        <Shield className="h-5 w-5 text-brand-300" />
         <h1 className="text-lg font-bold text-white">Mercados de times e jogos</h1>
         <span className="text-sm text-slate-500">· escanteios, gols, 1º tempo, faltas, chutes, cartões…</span>
       </header>
@@ -85,7 +85,7 @@ export function TeamBoard() {
         <div className="relative min-w-[180px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar time…"
-            className="w-full rounded-lg border border-line bg-bg py-2 pl-9 pr-3 text-sm outline-none focus:border-sky-400" />
+            className="w-full rounded-lg border border-line bg-bg py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-400" />
         </div>
         <Select value={league} onChange={setLeague} options={[["all", "Todas as ligas"], ...leagues.map((l) => [l, leagueName(l)] as [string, string])]} />
         <Select value={market} onChange={setMarket} options={[["all", "Todos os mercados"], ...markets]} />
@@ -93,7 +93,7 @@ export function TeamBoard() {
           options={[["all", "Time + Jogo"], ["team", "Só time"], ["match", "Só jogo (total)"]]} />
         <label className="flex items-center gap-2 text-sm text-slate-300">
           Score ≥ <b className="w-7 tabular-nums">{minScore}</b>
-          <input type="range" min={0} max={90} step={5} value={minScore} onChange={(e) => setMinScore(Number(e.target.value))} className="accent-sky-400" />
+          <input type="range" min={0} max={90} step={5} value={minScore} onChange={(e) => setMinScore(Number(e.target.value))} className="accent-brand-400" />
         </label>
       </section>
 
@@ -154,7 +154,7 @@ export function TeamBoard() {
       </ul>
 
       {filtered.length > limit && (
-        <button onClick={() => setLimit((l) => l + PAGE)} className="w-full rounded-xl border border-line py-3 text-sm text-sky-300 hover:bg-white/[0.03]">
+        <button onClick={() => setLimit((l) => l + PAGE)} className="w-full rounded-xl border border-line py-3 text-sm text-brand-300 hover:bg-white/[0.03]">
           Carregar mais ({filtered.length - limit})
         </button>
       )}
@@ -165,7 +165,7 @@ export function TeamBoard() {
 function Chip({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string; count: number }) {
   return (
     <button onClick={onClick} className={clsx("flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm",
-      active ? "border-sky-400 bg-sky-500/15 text-sky-200" : "border-line text-slate-300 hover:border-slate-500")}>
+      active ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500")}>
       {label}<span className="rounded-full bg-white/5 px-1.5 text-[11px] tabular-nums">{count}</span>
     </button>
   );
@@ -174,7 +174,7 @@ function Chip({ active, onClick, label, count }: { active: boolean; onClick: () 
 function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: [string, string][] }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}
-      className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-sky-400">
+      className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-brand-400">
       {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
     </select>
   );

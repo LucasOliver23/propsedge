@@ -147,7 +147,7 @@ function LiveCard({ bet, current, game, flash }: { bet: TrackedBet; current: num
       </div>
       <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-white/10">
         <span className={clsx("block h-full rounded-full transition-[width] duration-700",
-          hitting ? "bg-emerald-500" : bet.side === "under" ? "bg-sky-500" : "bg-amber-400")} style={{ width: `${progress}%` }} />
+          hitting ? "bg-emerald-500" : bet.side === "under" ? "bg-brand-500" : "bg-amber-400")} style={{ width: `${progress}%` }} />
       </div>
 
       <footer className="mt-3 flex justify-between text-xs text-slate-400">

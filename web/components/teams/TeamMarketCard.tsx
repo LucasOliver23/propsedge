@@ -176,7 +176,7 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
         <label className="text-xs text-slate-400">
           Odd na sua casa
           <input value={odd} onChange={(e) => setOdd(e.target.value)} inputMode="decimal" placeholder="ex.: 1.72"
-            className="mt-1 block w-28 rounded-lg border border-line bg-bg px-2 py-1.5 text-sm tabular-nums text-white outline-none focus:border-sky-400" />
+            className="mt-1 block w-28 rounded-lg border border-line bg-bg px-2 py-1.5 text-sm tabular-nums text-white outline-none focus:border-brand-400" />
         </label>
         <div className="text-xs text-slate-400">
           Odd justa
@@ -191,10 +191,10 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
         <label className="text-xs text-slate-400">
           Stake
           <input type="number" min={1} value={stake} onChange={(e) => setStake(Number(e.target.value))}
-            className="mt-1 block w-20 rounded-lg border border-line bg-bg px-2 py-1.5 text-sm tabular-nums text-white outline-none focus:border-sky-400" />
+            className="mt-1 block w-20 rounded-lg border border-line bg-bg px-2 py-1.5 text-sm tabular-nums text-white outline-none focus:border-brand-400" />
         </label>
         <button onClick={pin} disabled={busy || row.game_status !== "scheduled"}
-          className="ml-auto flex items-center gap-1.5 rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-400 disabled:opacity-40">
+          className="ml-auto flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-400 disabled:opacity-40">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pin className="h-4 w-4" />} Fixar
         </button>
         {msg && <p className={clsx("w-full text-xs", msg.ok ? "text-emerald-300" : "text-rose-300")}>{msg.text}</p>}

@@ -58,7 +58,7 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="7. Contato">
-        Dúvidas sobre esta política: <a className="text-sky-300 underline" href="mailto:clinemack5@gmail.com">clinemack5@gmail.com</a>
+        Dúvidas sobre esta política: <a className="text-brand-300 underline" href="mailto:clinemack5@gmail.com">clinemack5@gmail.com</a>
       </Section>
     </div>
   );

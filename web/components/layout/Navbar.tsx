@@ -20,7 +20,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-6 px-4">
         <Link href="/props" className="text-lg font-black tracking-tight text-slate-100">
-          Props<span className="text-sky-400">Edge</span>
+          Props<span className="text-brand-400">Edge</span>
         </Link>
         <nav className="flex gap-1 overflow-x-auto">
           {LINKS.map(({ href, label, icon: Icon }) => (

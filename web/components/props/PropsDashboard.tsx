@@ -141,7 +141,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
       </section>
 
       {modelCount > 0 && (
-        <p className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-4 py-2.5 text-xs text-sky-200">
+        <p className="rounded-xl border border-brand-500/20 bg-brand-500/5 px-4 py-2.5 text-xs text-brand-200">
           <b>{modelCount}</b> props estão com <b>linha do modelo</b> (sem odd de casa no momento): a linha é a que o PropsEdge
           calcula como ~50/50 e a odd mostrada é a <b>odd justa</b>. Compare com a odd da sua casa antes de entrar.
         </p>
@@ -167,7 +167,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
                 locked
                   ? "cursor-not-allowed border-line text-slate-600"
                   : preset === p.key
-                    ? "border-sky-400 bg-sky-500/15 text-sky-200"
+                    ? "border-brand-400 bg-brand-500/15 text-brand-200"
                     : "border-line text-slate-300 hover:border-slate-500",
               )}
             >
@@ -199,14 +199,14 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar jogador ou time…"
-            className="w-full rounded-lg border border-line bg-bg py-2 pl-9 pr-3 text-sm outline-none focus:border-sky-400"
+            className="w-full rounded-lg border border-line bg-bg py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-400"
           />
         </div>
 
         <select
           value={stat}
           onChange={(e) => setStat(e.target.value)}
-          className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-sky-400"
+          className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-brand-400"
           aria-label="Mercado"
         >
           <option value="all">Todos os mercados</option>
@@ -220,7 +220,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
           <input
             type="range" min={0} max={90} step={5} value={minConf}
             onChange={(e) => setMinConf(Number(e.target.value))}
-            className="accent-sky-400"
+            className="accent-brand-400"
           />
         </label>
 
@@ -230,7 +230,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-sky-400"
+          className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-brand-400"
           aria-label="Ordenar"
         >
           <option value="confidence">Maior confiança</option>
@@ -297,7 +297,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         {filtered.length > limit && (
           <button
             onClick={() => setLimit((l) => l + PAGE)}
-            className="w-full border-t border-line py-3 text-sm text-sky-300 hover:bg-white/[0.03]"
+            className="w-full border-t border-line py-3 text-sm text-brand-300 hover:bg-white/[0.03]"
           >
             Carregar mais ({filtered.length - limit} restantes)
           </button>
@@ -329,11 +329,11 @@ function SportChip({ active, onClick, label, count }: { active: boolean; onClick
       onClick={onClick}
       className={clsx(
         "flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition",
-        active ? "border-sky-400 bg-sky-500/15 text-sky-200" : "border-line text-slate-300 hover:border-slate-500",
+        active ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
       )}
     >
       {label}
-      <span className={clsx("rounded-full px-1.5 text-[11px] tabular-nums", active ? "bg-sky-400/20" : "bg-white/5 text-slate-500")}>
+      <span className={clsx("rounded-full px-1.5 text-[11px] tabular-nums", active ? "bg-brand-400/20" : "bg-white/5 text-slate-500")}>
         {count}
       </span>
     </button>
@@ -351,7 +351,7 @@ function Toggle({ checked, onChange, label, disabled }: { checked: boolean; onCh
       title={disabled ? "Recurso Pro" : undefined}
       className={clsx("flex items-center gap-2 text-sm", disabled ? "cursor-not-allowed text-slate-600" : "text-slate-300")}
     >
-      <span className={clsx("relative h-5 w-9 rounded-full transition", checked ? "bg-sky-500" : "bg-white/10")}>
+      <span className={clsx("relative h-5 w-9 rounded-full transition", checked ? "bg-brand-500" : "bg-white/10")}>
         <span className={clsx("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", checked ? "left-[18px]" : "left-0.5")} />
       </span>
       {label}

@@ -21,12 +21,12 @@ export function L10Chart({ values, opponents = [], line, side }: Props) {
       <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
         <span>Últimos {values.length} jogos</span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-px w-4 border-t border-dashed border-sky-300" /> Linha {line}
+          <span className="inline-block h-px w-4 border-t border-dashed border-brand-300" /> Linha {line}
         </span>
       </div>
       <div className="relative h-36">
         <div
-          className="pointer-events-none absolute inset-x-0 z-10 border-t border-dashed border-sky-300/80"
+          className="pointer-events-none absolute inset-x-0 z-10 border-t border-dashed border-brand-300/80"
           style={{ bottom: `${linePos}%` }}
         />
         <div className="flex h-full items-end gap-1.5">

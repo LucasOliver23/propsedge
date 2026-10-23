@@ -47,7 +47,7 @@ export default function TermsPage() {
       </Section>
 
       <Section title="7. Contato">
-        Dúvidas sobre estes termos: <a className="text-sky-300 underline" href="mailto:clinemack5@gmail.com">clinemack5@gmail.com</a>
+        Dúvidas sobre estes termos: <a className="text-brand-300 underline" href="mailto:clinemack5@gmail.com">clinemack5@gmail.com</a>
       </Section>
     </div>
   );

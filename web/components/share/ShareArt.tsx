@@ -4,7 +4,7 @@ import { leagueName } from "@/lib/leagues";
 import type { SeriesPoint, Side, TeamMarketRow } from "@/lib/types";
 import type { ShareFormat } from "./ShareButton";
 
-const GREEN = "#22c55e";
+const GREEN = "#22e072";
 const RED = "#ef4444";
 
 function Brand({ size = 44 }: { size?: number }) {
@@ -16,7 +16,7 @@ function Brand({ size = 44 }: { size?: number }) {
         <rect x="17" y="3" width="5" height="19" rx="1.5" fill={GREEN} />
       </svg>
       <span style={{ fontSize: size * 0.95, fontWeight: 900, color: "#fff", letterSpacing: -1 }}>
-        Props<span style={{ color: "#38bdf8" }}>Edge</span>
+        Props<span style={{ color: "#22e072" }}>Edge</span>
       </span>
     </div>
   );
@@ -24,7 +24,7 @@ function Brand({ size = 44 }: { size?: number }) {
 
 function Disclaimer() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 20, borderTop: "1px solid #243044", paddingTop: 28 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 20, borderTop: "1px solid #28282c", paddingTop: 28 }}>
       <div style={{ width: 84, height: 84, borderRadius: 999, background: GREEN, color: "#000", fontSize: 34, fontWeight: 900,
         display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>+18</div>
       <p style={{ fontSize: 24, lineHeight: 1.35, color: "#94a3b8", margin: 0 }}>
@@ -40,7 +40,7 @@ function Logo({ src, size }: { src: string | null; size: number }) {
   return p ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={p} alt="" width={size} height={size} style={{ objectFit: "contain" }} crossOrigin="anonymous" />
-  ) : <div style={{ width: size, height: size, borderRadius: 999, background: "#1a2233" }} />;
+  ) : <div style={{ width: size, height: size, borderRadius: 999, background: "#1c1c1f" }} />;
 }
 
 const pct = (h: number, n: number) => (n ? `${Math.round((h / n) * 100)}%` : "—");
@@ -60,7 +60,7 @@ export function MarketArt({ row, line, side, points, windowLabel, windows, proje
   const date = new Date(row.start_time);
 
   return (
-    <div style={{ width: "100%", height: "100%", background: "radial-gradient(1200px 600px at 0% 0%, #0f2a1d 0%, #0b0f17 55%)",
+    <div style={{ width: "100%", height: "100%", background: "radial-gradient(1200px 600px at 0% 0%, #0f2a1d 0%, #0a0a0b 55%)",
       fontFamily: "var(--font-inter), system-ui, sans-serif", color: "#fff", padding: 64, boxSizing: "border-box",
       display: "flex", flexDirection: "column", gap: format === "stories" ? 44 : 30 }}>
       <Brand />
@@ -78,7 +78,7 @@ export function MarketArt({ row, line, side, points, windowLabel, windows, proje
         </div>
       </div>
 
-      <div style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", gap: 18, background: "#111827",
+      <div style={{ display: "inline-flex", alignSelf: "flex-start", alignItems: "center", gap: 18, background: "#131315",
         border: `2px solid ${side === "over" ? GREEN : RED}`, borderRadius: 22, padding: "18px 30px" }}>
         {row.stat_key === "btts" ? (
           <>
@@ -103,7 +103,7 @@ export function MarketArt({ row, line, side, points, windowLabel, windows, proje
           ["SCORE", String(score), `chance ${Math.round(chance * 100)}%`],
           ["MATCHUP", grade ?? "—", grade ? (grade <= "B" ? "favorável" : grade === "C" ? "neutro" : "difícil") : ""],
         ].map(([k, v, s]) => (
-          <div key={k} style={{ background: "#111827", border: "1px solid #243044", borderRadius: 22, padding: "22px 10px", textAlign: "center" }}>
+          <div key={k} style={{ background: "#131315", border: "1px solid #28282c", borderRadius: 22, padding: "22px 10px", textAlign: "center" }}>
             <p style={{ fontSize: 22, color: "#94a3b8", margin: 0, letterSpacing: 1 }}>{k}</p>
             <p style={{ fontSize: 56, fontWeight: 900, margin: "6px 0", color: k === "MATCHUP" && grade && grade > "C" ? RED : GREEN }}>{v}</p>
             <p style={{ fontSize: 22, color: "#94a3b8", margin: 0 }}>{s}</p>
@@ -112,10 +112,10 @@ export function MarketArt({ row, line, side, points, windowLabel, windows, proje
       </div>
 
       {/* gráfico */}
-      <div style={{ position: "relative", height: chartH, boxSizing: "border-box", background: "#111827", border: "1px solid #243044", borderRadius: 24, padding: "30px 24px 90px" }}>
+      <div style={{ position: "relative", height: chartH, boxSizing: "border-box", background: "#131315", border: "1px solid #28282c", borderRadius: 24, padding: "30px 24px 90px" }}>
         <div style={{ position: "relative", height: "100%" }}>
         <div style={{ position: "absolute", left: 0, right: 0, bottom: `${(line / max) * 100}%`, borderTop: "3px solid rgba(255,255,255,.75)", zIndex: 2 }}>
-          <span style={{ position: "absolute", top: -22, left: 0, background: "#0b0f17", border: "2px solid #fff", borderRadius: 8, padding: "2px 10px", fontSize: 24, fontWeight: 800 }}>{line}</span>
+          <span style={{ position: "absolute", top: -22, left: 0, background: "#0a0a0b", border: "2px solid #fff", borderRadius: 8, padding: "2px 10px", fontSize: 24, fontWeight: 800 }}>{line}</span>
         </div>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 12, height: "100%", paddingLeft: 70 }}>
           {pts.map((p, i) => {
@@ -137,7 +137,7 @@ export function MarketArt({ row, line, side, points, windowLabel, windows, proje
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${windows.length}, 1fr)`, background: "#111827", border: "1px solid #243044", borderRadius: 22 }}>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${windows.length}, 1fr)`, background: "#131315", border: "1px solid #28282c", borderRadius: 22 }}>
         {windows.map((w) => {
           const r = w.n ? w.hits / w.n : null;
           return (
@@ -163,7 +163,7 @@ export function RecapArt({ dayLabel, markets, total, greens, format }: {
   const list = markets.slice(0, format === "stories" ? 12 : 9);
   const hr = total ? greens / total : 0;
   return (
-    <div style={{ width: "100%", height: "100%", background: "radial-gradient(1200px 700px at 100% 0%, #0f2a1d 0%, #0b0f17 60%)",
+    <div style={{ width: "100%", height: "100%", background: "radial-gradient(1200px 700px at 100% 0%, #0f2a1d 0%, #0a0a0b 60%)",
       fontFamily: "var(--font-inter), system-ui, sans-serif", color: "#fff", padding: 64, boxSizing: "border-box",
       display: "flex", flexDirection: "column", gap: 34 }}>
       <Brand />
@@ -174,8 +174,8 @@ export function RecapArt({ dayLabel, markets, total, greens, format }: {
         </p>
       </div>
 
-      <div style={{ background: "#111827", border: "1px solid #243044", borderRadius: 24, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 190px 230px", padding: "16px 28px", color: "#94a3b8", fontSize: 22, fontWeight: 700, borderBottom: "1px solid #243044" }}>
+      <div style={{ background: "#131315", border: "1px solid #28282c", borderRadius: 24, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 190px 230px", padding: "16px 28px", color: "#94a3b8", fontSize: 22, fontWeight: 700, borderBottom: "1px solid #28282c" }}>
           <span>MERCADO</span><span style={{ textAlign: "center" }}>ENTRADAS</span><span>HIT RATE</span>
         </div>
         {list.map((m) => {
@@ -196,7 +196,7 @@ export function RecapArt({ dayLabel, markets, total, greens, format }: {
         })}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", background: "#111827", border: "1px solid #243044", borderRadius: 24, padding: "24px 0", textAlign: "center" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", background: "#131315", border: "1px solid #28282c", borderRadius: 24, padding: "24px 0", textAlign: "center" }}>
         {[["ENTRADAS", String(total), "#fff"], ["GREEN", String(greens), GREEN], ["RED", String(total - greens), RED],
           ["HIT RATE", `${Math.round(hr * 100)}%`, hr >= 0.6 ? GREEN : "#fbbf24"]].map(([k, v, c]) => (
           <div key={k}>

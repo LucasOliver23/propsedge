@@ -5,12 +5,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: "#0b0f17",
-        surface: "#111827",
-        elevated: "#1a2233",
-        line: "#243044",
+        bg: "#0a0a0b",
+        surface: "#131315",
+        elevated: "#1c1c1f",
+        line: "#28282c",
         green: { DEFAULT: "#22c55e" },
         red: { DEFAULT: "#ef4444" },
+        // Verde vibrante no estilo PropsBR (cor de marca/destaque, no lugar do azul "sky").
+        brand: {
+          100: "#d2ffe3",
+          200: "#9bffc5",
+          300: "#5dfa9e",
+          400: "#22e072",
+          500: "#14b858",
+          600: "#0d9447",
+        },
       },
       fontFamily: { sans: ["var(--font-inter)", "system-ui", "sans-serif"] },
       keyframes: {

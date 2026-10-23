@@ -48,7 +48,7 @@ export function ShareButton({ filename, render }: Props) {
     <div className="flex items-center gap-1.5">
       {(["post", "stories"] as ShareFormat[]).map((f) => (
         <button key={f} type="button" onClick={() => { setErr(null); setFormat(f); }} disabled={!!format}
-          className="flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-slate-300 hover:border-sky-400 hover:text-sky-300 disabled:opacity-50">
+          className="flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-slate-300 hover:border-brand-400 hover:text-brand-300 disabled:opacity-50">
           {format === f ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImageDown className="h-3.5 w-3.5" />}
           {f === "post" ? "Post" : "Stories"}
         </button>

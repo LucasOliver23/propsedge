@@ -51,7 +51,7 @@ export function PinButton({ pinned, defaultStake, disabled, onConfirm }: Props) 
           "flex h-9 w-9 items-center justify-center rounded-lg border transition",
           pinned
             ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-            : "border-line text-slate-300 hover:border-sky-400 hover:text-sky-300",
+            : "border-line text-slate-300 hover:border-brand-400 hover:text-brand-300",
           disabled && !pinned && "cursor-not-allowed opacity-40",
         )}
       >
@@ -69,13 +69,13 @@ export function PinButton({ pinned, defaultStake, disabled, onConfirm }: Props) 
               step={1}
               value={stake}
               onChange={(e) => setStake(Number(e.target.value))}
-              className="w-full rounded-lg border border-line bg-bg px-2 py-1.5 text-sm tabular-nums outline-none focus:border-sky-400"
+              className="w-full rounded-lg border border-line bg-bg px-2 py-1.5 text-sm tabular-nums outline-none focus:border-brand-400"
             />
             <button
               type="button"
               onClick={confirm}
               disabled={busy || stake <= 0}
-              className="flex items-center gap-1 rounded-lg bg-sky-500 px-3 text-sm font-semibold text-white hover:bg-sky-400 disabled:opacity-50"
+              className="flex items-center gap-1 rounded-lg bg-brand-500 px-3 text-sm font-semibold text-white hover:bg-brand-400 disabled:opacity-50"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Fixar"}
             </button>

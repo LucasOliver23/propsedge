@@ -146,7 +146,7 @@ function GamesTab() {
               <div className="mt-3 flex h-7 overflow-hidden rounded-lg text-[11px] font-bold">
                 <span className="flex items-center justify-center bg-emerald-500/30 text-emerald-100" style={{ width: `${ph * 100}%` }}>1 · {Math.round(ph * 100)}%</span>
                 <span className="flex items-center justify-center bg-slate-500/30 text-slate-100" style={{ width: `${pd * 100}%` }}>X · {Math.round(pd * 100)}%</span>
-                <span className="flex items-center justify-center bg-sky-500/30 text-sky-100" style={{ width: `${pa * 100}%` }}>2 · {Math.round(pa * 100)}%</span>
+                <span className="flex items-center justify-center bg-brand-500/30 text-brand-100" style={{ width: `${pa * 100}%` }}>2 · {Math.round(pa * 100)}%</span>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
                 {([["Over 1.5", g.p_over15], ["Over 2.5", g.p_over25], ["Ambas marcam", g.p_btts]] as [string, number][]).map(([l, p]) => (

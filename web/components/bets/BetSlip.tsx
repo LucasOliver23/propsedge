@@ -51,7 +51,7 @@ export function BetSlip() {
       <div className="flex gap-2">
         {(["all", "open", "settled"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
-            className={clsx("rounded-full border px-3 py-1 text-sm", filter === f ? "border-sky-400 bg-sky-500/15 text-sky-200" : "border-line text-slate-400")}>
+            className={clsx("rounded-full border px-3 py-1 text-sm", filter === f ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-400")}>
             {f === "all" ? "Todas" : f === "open" ? "Abertas" : "Liquidadas"}
           </button>
         ))}
