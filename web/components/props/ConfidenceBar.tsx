@@ -16,7 +16,7 @@ export function ConfidenceBar({ value, compact = false }: { value: number; compa
           style={{ width: `${value}%` }}
         />
       </div>
-      <span className={clsx("w-9 text-right text-sm font-semibold tabular-nums", tone.text)}>{value}%</span>
+      <span className={clsx("w-9 text-right font-display text-sm font-semibold tabular-nums", tone.text)}>{value}%</span>
     </div>
   );
 }

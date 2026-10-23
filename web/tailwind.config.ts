@@ -21,7 +21,10 @@ export default {
           600: "#0d9447",
         },
       },
-      fontFamily: { sans: ["var(--font-inter)", "system-ui", "sans-serif"] },
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-grotesk)", "system-ui", "sans-serif"],
+      },
       keyframes: {
         flash: { "0%": { backgroundColor: "rgba(34,197,94,.25)" }, "100%": { backgroundColor: "transparent" } },
       },

@@ -52,7 +52,7 @@ function FactorRow({
         <span className="absolute inset-y-0 left-1/2 w-px bg-white/20" />
         <span className={clsx("block h-full rounded-full transition-[width] duration-500", tone.bar)} style={{ width: `${Math.round(p * 100)}%` }} />
       </div>
-      <span className={clsx("w-20 shrink-0 text-right text-xs font-semibold tabular-nums", tone.text)}>
+      <span className={clsx("w-20 shrink-0 text-right font-display text-xs font-semibold tabular-nums", tone.text)}>
         {fraction ?? `${Math.round(p * 100)}%`}
       </span>
       <span className="w-9 shrink-0 text-right text-[10px] tabular-nums text-slate-600" title="Peso no score final">
@@ -68,7 +68,7 @@ function Group({ title, score, children }: { title: string; score: number | null
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{title}</p>
         {score != null && (
-          <span className={clsx("text-xs font-bold tabular-nums", barTone(score).text)}>{Math.round(score * 100)}%</span>
+          <span className={clsx("font-display text-xs font-bold tabular-nums", barTone(score).text)}>{Math.round(score * 100)}%</span>
         )}
       </div>
       <div className="space-y-2">{children}</div>
@@ -103,7 +103,7 @@ export function ConfidenceBreakdown({ row }: { row: PropRow }) {
     <div className="space-y-3 rounded-xl border border-line bg-bg/40 p-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-slate-100">Como chegamos nesse score</p>
-        <span className={clsx("rounded-full bg-white/5 px-2.5 py-0.5 text-sm font-bold tabular-nums", tone.text)}>
+        <span className={clsx("rounded-full bg-white/5 px-2.5 py-0.5 font-display text-sm font-bold tabular-nums", tone.text)}>
           {row.confidence}%
         </span>
       </div>

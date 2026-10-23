@@ -119,14 +119,14 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
   // ---------------------------------------------------------------- render
   return (
     <div className={clsx("mx-auto max-w-[1400px] space-y-5 px-4 py-6", multiples.size > 0 && "pb-28")}>
-      {/* KPIs */}
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Placar do dia */}
+      <section className="grid grid-cols-2 divide-y divide-line rounded-xl border border-line bg-surface sm:grid-cols-4 sm:divide-y-0 sm:divide-x">
         <Kpi icon={<Target className="h-4 w-4" />} label="Props hoje" value={base.length.toLocaleString("pt-BR")} />
         <Kpi
           icon={<Flame className="h-4 w-4" />}
           label="Alertas EV+"
           value={isPremium ? String(evCount) : "Pro"}
-          tone="text-emerald-300"
+          tone="text-brand-300"
         />
         <Kpi
           icon={<SlidersHorizontal className="h-4 w-4" />}
@@ -316,9 +316,9 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
 // ------------------------------------------------------------------ UI local
 function Kpi({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-xl border border-line bg-surface p-4">
-      <p className="flex items-center gap-1.5 text-xs text-slate-400">{icon}{label}</p>
-      <p className={clsx("mt-1 text-2xl font-bold tabular-nums", tone ?? "text-slate-100")}>{value}</p>
+    <div className="p-4">
+      <p className="flex items-center gap-1.5 text-xs text-slate-500">{icon}{label}</p>
+      <p className={clsx("mt-1 font-display text-2xl font-bold tabular-nums", tone ?? "text-slate-100")}>{value}</p>
     </div>
   );
 }

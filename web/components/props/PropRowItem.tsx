@@ -82,7 +82,7 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin,
           >
             {row.side === "over" ? "Mais" : "Menos"}
           </span>
-          <span className="font-semibold tabular-nums text-slate-100">{row.line}</span>
+          <span className="font-display font-semibold tabular-nums text-slate-100">{row.line}</span>
           <span className="truncate text-sm text-slate-400">{row.stat_label ?? row.stat_key}</span>
           {isModel && (
             <span className="shrink-0 rounded bg-brand-500/15 px-1 text-[10px] font-bold uppercase text-brand-300" title="Linha calculada pelo PropsEdge (sem odd de casa)">modelo</span>
@@ -104,12 +104,12 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin,
           <div className="text-right leading-tight">
             {isModel ? (
               <>
-                <p className="font-semibold tabular-nums text-brand-200">{fmtOdds(fairOdd)}</p>
+                <p className="font-display font-semibold tabular-nums text-brand-200">{fmtOdds(fairOdd)}</p>
                 <p className="text-[11px] text-slate-500">odd justa</p>
               </>
             ) : (
               <>
-                <p className="font-semibold tabular-nums text-slate-100">{fmtOdds(row.best_odds)}</p>
+                <p className="font-display font-semibold tabular-nums text-slate-100">{fmtOdds(row.best_odds)}</p>
                 <p className="text-[11px] text-slate-500">{row.best_book ? BOOK_LABELS[row.best_book] ?? row.best_book : ""}</p>
               </>
             )}
