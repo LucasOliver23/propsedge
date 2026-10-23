@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import clsx from "clsx";
-import { ChevronDown, Flame, TrendingUp } from "lucide-react";
+import { ChevronDown, Flame, ListPlus, TrendingUp } from "lucide-react";
 import { BOOK_LABELS } from "@/lib/constants";
 import { kickoff, odds as fmtOdds, pct, signedPct } from "@/lib/format";
 import type { PropRow } from "@/lib/types";
@@ -15,7 +15,7 @@ import { OddsComparison } from "./OddsComparison";
 import { PinButton } from "./PinButton";
 
 export const GRID =
-  "md:grid md:grid-cols-[minmax(170px,2fr)_minmax(120px,1.3fr)_repeat(4,50px)_52px_128px_84px_72px_40px_24px] md:items-center md:gap-3";
+  "md:grid md:grid-cols-[minmax(170px,2fr)_minmax(120px,1.3fr)_repeat(4,50px)_52px_128px_84px_72px_36px_40px_24px] md:items-center md:gap-3";
 
 interface Props {
   row: PropRow;
@@ -24,9 +24,11 @@ interface Props {
   defaultStake: number;
   onToggle: () => void;
   onPin: (stake: number) => Promise<void>;
+  inMultiple?: boolean;
+  onToggleMultiple?: () => void;
 }
 
-function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin }: Props) {
+function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin, inMultiple, onToggleMultiple }: Props) {
   const started = row.game_status !== "scheduled";
   const isEv = row.ev != null && row.ev >= 0.03;
   const isModel = row.line_source === "model";
@@ -129,6 +131,24 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
               </span>
             )}
           </div>
+          {onToggleMultiple && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleMultiple(); }}
+              disabled={started}
+              aria-label={inMultiple ? "Remover da múltipla" : "Adicionar à múltipla"}
+              title={inMultiple ? "Remover da múltipla" : "Adicionar à múltipla"}
+              className={clsx(
+                "flex h-9 w-9 items-center justify-center rounded-lg border transition",
+                inMultiple
+                  ? "border-violet-500/40 bg-violet-500/15 text-violet-300"
+                  : "border-line text-slate-300 hover:border-violet-400 hover:text-violet-300",
+                started && !inMultiple && "cursor-not-allowed opacity-40",
+              )}
+            >
+              <ListPlus className="h-4 w-4" />
+            </button>
+          )}
           <PinButton pinned={pinned} disabled={started} defaultStake={defaultStake} onConfirm={onPin} />
           <ChevronDown className={clsx("hidden h-4 w-4 text-slate-500 transition md:block", expanded && "rotate-180")} />
         </div>

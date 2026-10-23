@@ -9,6 +9,7 @@ import { useTrackedBets } from "@/hooks/useTrackedBets";
 import { SPORTS } from "@/lib/constants";
 import { brl } from "@/lib/format";
 import type { PropRow, Side, SportId } from "@/lib/types";
+import { MultiplesBar } from "./MultiplesBar";
 import { GRID, PropRowItem } from "./PropRowItem";
 
 type SortKey = "confidence" | "ev" | "l10" | "time";
@@ -41,6 +42,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
   const [preset, setPreset] = useState<string>("melhor");
   const [limit, setLimit] = useState(PAGE);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [multiples, setMultiples] = useState<Map<string, PropRow>>(new Map());
   const search = useDeferredValue(query.trim().toLowerCase());
 
   // Por padrão mostramos só o lado mais forte de cada mercado
@@ -104,9 +106,19 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
     [user, router, track, trackModel],
   );
 
+  const toggleMultiple = useCallback((row: PropRow) => {
+    const key = `${row.market_id}:${row.side}`;
+    setMultiples((m) => {
+      const next = new Map(m);
+      if (next.has(key)) next.delete(key);
+      else next.set(key, row);
+      return next;
+    });
+  }, []);
+
   // ---------------------------------------------------------------- render
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5 px-4 py-6">
+    <div className={clsx("mx-auto max-w-[1400px] space-y-5 px-4 py-6", multiples.size > 0 && "pb-28")}>
       {/* KPIs */}
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi icon={<Target className="h-4 w-4" />} label="Props hoje" value={base.length.toLocaleString("pt-BR")} />
@@ -252,6 +264,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
           <span className="text-right">EV</span>
           <span />
           <span />
+          <span />
         </div>
 
         {error && <p className="p-6 text-sm text-rose-300">Erro ao carregar: {error}</p>}
@@ -274,6 +287,8 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
                 defaultStake={Number(profile?.unit_size ?? 10)}
                 onToggle={() => setExpanded((e) => (e === key ? null : key))}
                 onPin={(stake) => handlePin(r.market_id, r.side, stake, r.line_source === "model")}
+                inMultiple={multiples.has(key)}
+                onToggleMultiple={() => toggleMultiple(r)}
               />
             );
           })}
@@ -288,6 +303,12 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
           </button>
         )}
       </section>
+
+      <MultiplesBar
+        legs={Array.from(multiples.values())}
+        onRemove={(key) => setMultiples((m) => { const next = new Map(m); next.delete(key); return next; })}
+        onClear={() => setMultiples(new Map())}
+      />
     </div>
   );
 }
