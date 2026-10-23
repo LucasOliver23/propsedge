@@ -5,10 +5,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: "#0a0a0b",
-        surface: "#131315",
-        elevated: "#1c1c1f",
-        line: "#28282c",
+        bg: "#050506",
+        surface: "#0f0f11",
+        elevated: "#19191c",
+        line: "#26262a",
         green: { DEFAULT: "#22c55e" },
         red: { DEFAULT: "#ef4444" },
         // Verde vibrante no estilo PropsBR (cor de marca/destaque, no lugar do azul "sky").

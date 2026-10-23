@@ -3,12 +3,25 @@
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Flame, RefreshCw, Search, SlidersHorizontal, Target, Wallet } from "lucide-react";
+import {
+  Flame,
+  Layers,
+  Rocket,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
+  Target,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { usePropsBoard } from "@/hooks/usePropsBoard";
 import { useTrackedBets } from "@/hooks/useTrackedBets";
 import { SPORTS } from "@/lib/constants";
-import { brDateKey, brl, kickoff } from "@/lib/format";
+import { brDateKey, brl } from "@/lib/format";
 import type { PropRow, Side, SportId } from "@/lib/types";
+import { FiltersSidebar } from "./FiltersSidebar";
+import { GamesSidebar } from "./GamesSidebar";
 import { MultiplesBar } from "./MultiplesBar";
 import { GRID, PropRowItem } from "./PropRowItem";
 
@@ -29,13 +42,13 @@ function propScore(r: PropRow): number {
  * Cada um só ajusta sort/minConf/evOnly/limit — os filtros avançados continuam
  * disponíveis para afinar depois. */
 const PRESETS = [
-  { key: "melhor", label: "Melhor do dia", sort: "confidence" as SortKey, minConf: 0, evOnly: false },
-  { key: "melhores", label: "10 Melhores", sort: "confidence" as SortKey, minConf: 0, evOnly: false, limit: 10 },
-  { key: "confianca", label: "Top Confiança", sort: "confidence" as SortKey, minConf: 70, evOnly: false },
-  { key: "vantagem", label: "Top Vantagem", sort: "ev" as SortKey, minConf: 0, evOnly: true, pro: true },
-  { key: "score", label: "Top Score", sort: "score" as SortKey, minConf: 0, evOnly: false },
-  { key: "quente", label: "Quente (L10)", sort: "l10" as SortKey, minConf: 0, evOnly: false },
-  { key: "oportunidades", label: "Oportunidades", sort: "ev" as SortKey, minConf: 55, evOnly: false },
+  { key: "melhor", label: "Melhor do dia", icon: Star, sort: "confidence" as SortKey, minConf: 0, evOnly: false },
+  { key: "melhores", label: "10 Melhores", icon: Layers, sort: "confidence" as SortKey, minConf: 0, evOnly: false, limit: 10 },
+  { key: "confianca", label: "Top Confiança", icon: ShieldCheck, sort: "confidence" as SortKey, minConf: 70, evOnly: false },
+  { key: "vantagem", label: "Top Vantagem", icon: TrendingUp, sort: "ev" as SortKey, minConf: 0, evOnly: true, pro: true },
+  { key: "score", label: "Top Score", icon: Rocket, sort: "score" as SortKey, minConf: 0, evOnly: false },
+  { key: "quente", label: "Quente (L10)", icon: Flame, sort: "l10" as SortKey, minConf: 0, evOnly: false },
+  { key: "oportunidades", label: "Oportunidades", icon: Sparkles, sort: "ev" as SortKey, minConf: 55, evOnly: false },
 ] as const;
 
 export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }) {
@@ -88,13 +101,19 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
    * derivado das próprias props (casa/fora a partir do ponto de vista de quem
    * é titular em cada linha), para filtrar o board por confronto específico. */
   const gamesList = useMemo(() => {
-    const m = new Map<number, { id: number; home: string; away: string; start: string }>();
+    const m = new Map<number, { id: number; home: string; away: string; start: string; live: boolean }>();
     for (const r of base) {
       if (sport !== "all" && r.sport_id !== sport) continue;
       if (m.has(r.game_id)) continue;
       const home = r.is_home ? r.team_abbr : r.opp_abbr;
       const away = r.is_home ? r.opp_abbr : r.team_abbr;
-      m.set(r.game_id, { id: r.game_id, home: home ?? "?", away: away ?? "?", start: r.start_time });
+      m.set(r.game_id, {
+        id: r.game_id,
+        home: home ?? "?",
+        away: away ?? "?",
+        start: r.start_time,
+        live: r.game_status === "live",
+      });
     }
     return Array.from(m.values()).sort((a, b) => +new Date(a.start) - +new Date(b.start));
   }, [base, sport]);
@@ -204,6 +223,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
       <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Rankeadas">
         {PRESETS.map((p) => {
           const locked = "pro" in p && p.pro && !isPremium;
+          const Icon = p.icon;
           return (
             <button
               key={p.key}
@@ -218,7 +238,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
               }}
               title={locked ? "Recurso Pro" : undefined}
               className={clsx(
-                "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
+                "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
                 locked
                   ? "cursor-not-allowed border-line text-slate-600"
                   : view === "board" && preset === p.key
@@ -226,6 +246,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
                     : "border-line text-slate-300 hover:border-slate-500",
               )}
             >
+              <Icon className="h-3.5 w-3.5" />
               {p.label}
             </button>
           );
@@ -233,12 +254,13 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         <button
           onClick={() => setView("multiplas")}
           className={clsx(
-            "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
+            "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
             view === "multiplas"
               ? "border-violet-400 bg-violet-500/15 text-violet-200"
               : "border-line text-slate-300 hover:border-slate-500",
           )}
         >
+          <Layers className="h-3.5 w-3.5" />
           Múltiplas{multiples.size > 0 ? ` (${multiples.size})` : ""}
         </button>
       </nav>
@@ -257,193 +279,122 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         ))}
       </nav>
 
-      {/* Jogos do dia — filtra o board por confronto específico (painel "Jogos" do PropsBR) */}
-      {gamesList.length > 0 && (
-        <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Jogos">
-          {gamesList.map((g) => {
-            const active = selectedGames.has(g.id);
-            return (
-              <button
-                key={g.id}
-                onClick={() => toggleGame(g.id)}
-                className={clsx(
-                  "flex shrink-0 flex-col items-start rounded-lg border px-3 py-1.5 text-xs transition",
-                  active ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
-                )}
-              >
-                <span className="font-semibold">{g.home} vs {g.away}</span>
-                <span className="text-slate-500">{kickoff(g.start)}</span>
-              </button>
-            );
-          })}
-          {selectedGames.size > 0 && (
+      {/* Layout 3 colunas: Jogos | Board | Filtros (igual ao PropsBR) */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)_260px]">
+        <GamesSidebar
+          games={gamesList}
+          selected={selectedGames}
+          onToggle={toggleGame}
+          onClear={() => setSelectedGames(new Set())}
+        />
+
+        <div className="min-w-0 space-y-4">
+          {/* Mercados — botões horizontais (igual à linha de mercados do PropsBR) */}
+          <nav className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label="Mercados">
             <button
-              onClick={() => setSelectedGames(new Set())}
-              className="shrink-0 self-center rounded-lg px-2 text-xs text-slate-500 underline hover:text-slate-300"
-            >
-              limpar
-            </button>
-          )}
-        </nav>
-      )}
-
-      {/* Mercados — botões horizontais (igual à linha de mercados do PropsBR) */}
-      <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Mercados">
-        <button
-          onClick={() => setStat("all")}
-          className={clsx(
-            "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition",
-            stat === "all" ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
-          )}
-        >
-          Todos os mercados
-        </button>
-        {statOptions.map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => setStat(k)}
-            className={clsx(
-              "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition",
-              stat === k ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-
-      {/* Filtros rápidos */}
-      <section className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar jogador ou time…"
-            className="w-full rounded-lg border border-line bg-bg py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-400"
-          />
-        </div>
-
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          Confiança ≥ <b className="w-8 tabular-nums">{minConf}%</b>
-          <input
-            type="range" min={0} max={90} step={5} value={minConf}
-            onChange={(e) => setMinConf(Number(e.target.value))}
-            className="accent-brand-400"
-          />
-        </label>
-
-        <Toggle checked={evOnly} onChange={setEvOnly} label="Só EV+" disabled={!isPremium} />
-        <Toggle checked={bothSides} onChange={setBothSides} label="Mostrar Mais/Menos" />
-
-        {/* Localização (Casa/Fora) */}
-        <div className="flex overflow-hidden rounded-lg border border-line text-xs">
-          {([["all", "Todos"], ["home", "Casa"], ["away", "Fora"]] as const).map(([v, label]) => (
-            <button
-              key={v}
-              onClick={() => setHomeAway(v)}
+              onClick={() => setStat("all")}
               className={clsx(
-                "px-2.5 py-2 font-medium transition",
-                homeAway === v ? "bg-brand-500/15 text-brand-200" : "text-slate-400 hover:bg-white/5",
+                "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+                stat === "all" ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
               )}
             >
-              {label}
+              Todos os mercados
             </button>
-          ))}
+            {statOptions.map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setStat(k)}
+                className={clsx(
+                  "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+                  stat === k ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Tabela */}
+          <section className="overflow-visible rounded-xl border border-line bg-surface">
+            <div className={clsx(GRID, "hidden border-b border-line px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 md:grid")}>
+              <span>Jogador</span>
+              <span>Prop</span>
+              <span className="text-center">L5</span>
+              <span className="text-center">L10</span>
+              <span className="text-center">L20</span>
+              <span className="text-center">H2H</span>
+              <span className="text-center" title="Ranking da defesa adversária vs posição">DvP</span>
+              <span>Confiança</span>
+              <span className="text-right">Melhor odd</span>
+              <span className="text-right">EV</span>
+              <span />
+              <span />
+              <span />
+            </div>
+
+            {error && <p className="p-6 text-sm text-rose-300">Erro ao carregar: {error}</p>}
+            {loading && !rows.length && <SkeletonRows />}
+            {!loading && !visibleRows.length && (
+              <p className="p-10 text-center text-sm text-slate-400">
+                {view === "multiplas"
+                  ? "Nenhuma prop na múltipla ainda — clique no ícone roxo de uma prop para adicionar."
+                  : rows.length
+                    ? "Nenhuma prop com esses filtros."
+                    : "Nenhuma prop para as próximas 36h ainda — as props são geradas a cada 15 min conforme a agenda."}
+              </p>
+            )}
+
+            <ul>
+              {visibleRows.slice(0, view === "multiplas" ? undefined : limit).map((r) => {
+                const key = `${r.market_id}:${r.side}`;
+                return (
+                  <PropRowItem
+                    key={key}
+                    row={r}
+                    expanded={expanded === key}
+                    pinned={pinned.has(key)}
+                    defaultStake={Number(profile?.unit_size ?? 10)}
+                    onToggle={() => setExpanded((e) => (e === key ? null : key))}
+                    onPin={(stake) => handlePin(r.market_id, r.side, stake, r.line_source === "model")}
+                    inMultiple={multiples.has(key)}
+                    onToggleMultiple={() => toggleMultiple(r)}
+                  />
+                );
+              })}
+            </ul>
+
+            {view === "board" && filtered.length > limit && (
+              <button
+                onClick={() => setLimit((l) => l + PAGE)}
+                className="w-full border-t border-line py-3 text-sm text-brand-300 hover:bg-white/[0.03]"
+              >
+                Carregar mais ({filtered.length - limit} restantes)
+              </button>
+            )}
+          </section>
         </div>
 
-        {/* Período */}
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as typeof period)}
-          className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-brand-400"
-          aria-label="Período"
-        >
-          <option value="all">Qualquer dia</option>
-          <option value="today">Hoje</option>
-          <option value="tomorrow">Amanhã</option>
-        </select>
-
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-brand-400"
-          aria-label="Ordenar"
-        >
-          <option value="confidence">Maior confiança</option>
-          <option value="ev">Maior EV</option>
-          <option value="l10">Melhor L10</option>
-          <option value="time">Horário</option>
-        </select>
-
-        <button
-          onClick={reload}
-          className="ml-auto flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200"
-          title="Atualiza sozinho via tempo real"
-        >
-          <RefreshCw className={clsx("h-3.5 w-3.5", loading && "animate-spin")} />
-          {updatedAt ? updatedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "…"}
-        </button>
-      </section>
-
-      {/* Tabela */}
-      <section className="overflow-visible rounded-xl border border-line bg-surface">
-        <div className={clsx(GRID, "hidden border-b border-line px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 md:grid")}>
-          <span>Jogador</span>
-          <span>Prop</span>
-          <span className="text-center">L5</span>
-          <span className="text-center">L10</span>
-          <span className="text-center">L20</span>
-          <span className="text-center">H2H</span>
-          <span className="text-center" title="Ranking da defesa adversária vs posição">DvP</span>
-          <span>Confiança</span>
-          <span className="text-right">Melhor odd</span>
-          <span className="text-right">EV</span>
-          <span />
-          <span />
-          <span />
-        </div>
-
-        {error && <p className="p-6 text-sm text-rose-300">Erro ao carregar: {error}</p>}
-        {loading && !rows.length && <SkeletonRows />}
-        {!loading && !visibleRows.length && (
-          <p className="p-10 text-center text-sm text-slate-400">
-            {view === "multiplas"
-              ? "Nenhuma prop na múltipla ainda — clique no ícone roxo de uma prop para adicionar."
-              : rows.length
-                ? "Nenhuma prop com esses filtros."
-                : "Nenhuma prop para as próximas 36h ainda — as props são geradas a cada 15 min conforme a agenda."}
-          </p>
-        )}
-
-        <ul>
-          {visibleRows.slice(0, view === "multiplas" ? undefined : limit).map((r) => {
-            const key = `${r.market_id}:${r.side}`;
-            return (
-              <PropRowItem
-                key={key}
-                row={r}
-                expanded={expanded === key}
-                pinned={pinned.has(key)}
-                defaultStake={Number(profile?.unit_size ?? 10)}
-                onToggle={() => setExpanded((e) => (e === key ? null : key))}
-                onPin={(stake) => handlePin(r.market_id, r.side, stake, r.line_source === "model")}
-                inMultiple={multiples.has(key)}
-                onToggleMultiple={() => toggleMultiple(r)}
-              />
-            );
-          })}
-        </ul>
-
-        {view === "board" && filtered.length > limit && (
-          <button
-            onClick={() => setLimit((l) => l + PAGE)}
-            className="w-full border-t border-line py-3 text-sm text-brand-300 hover:bg-white/[0.03]"
-          >
-            Carregar mais ({filtered.length - limit} restantes)
-          </button>
-        )}
-      </section>
+        <FiltersSidebar
+          query={query}
+          onQuery={setQuery}
+          minConf={minConf}
+          onMinConf={setMinConf}
+          evOnly={evOnly}
+          onEvOnly={setEvOnly}
+          evLocked={!isPremium}
+          bothSides={bothSides}
+          onBothSides={setBothSides}
+          homeAway={homeAway}
+          onHomeAway={setHomeAway}
+          period={period}
+          onPeriod={setPeriod}
+          sort={sort}
+          onSort={setSort}
+          loading={loading}
+          updatedAt={updatedAt}
+          onReload={reload}
+        />
+      </div>
 
       <MultiplesBar
         legs={Array.from(multiples.values())}
@@ -477,25 +428,6 @@ function SportChip({ active, onClick, label, count }: { active: boolean; onClick
       <span className={clsx("rounded-full px-1.5 text-[11px] tabular-nums", active ? "bg-brand-400/20" : "bg-white/5 text-slate-500")}>
         {count}
       </span>
-    </button>
-  );
-}
-
-function Toggle({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      title={disabled ? "Recurso Pro" : undefined}
-      className={clsx("flex items-center gap-2 text-sm", disabled ? "cursor-not-allowed text-slate-600" : "text-slate-300")}
-    >
-      <span className={clsx("relative h-5 w-9 rounded-full transition", checked ? "bg-brand-500" : "bg-white/10")}>
-        <span className={clsx("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", checked ? "left-[18px]" : "left-0.5")} />
-      </span>
-      {label}
     </button>
   );
 }
