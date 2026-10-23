@@ -123,7 +123,11 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin,
               <span
                 className={clsx(
                   "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-bold tabular-nums",
-                  isEv ? "bg-emerald-500/15 text-emerald-300" : row.ev > 0 ? "text-slate-300" : "text-slate-500",
+                  isEv
+                    ? "bg-brand-400 text-bg shadow-[0_0_10px_1px_rgba(34,224,114,0.5)]"
+                    : row.ev > 0
+                      ? "text-slate-300"
+                      : "text-slate-500",
                 )}
               >
                 {isEv && <Flame className="h-3 w-3" />}

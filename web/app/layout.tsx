@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Bricolage_Grotesque, Inter } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-// Números e títulos (placar/KPIs): geométrica, com algarismos técnicos — contraste
-// deliberado com a Inter do corpo/UI, no espírito de um placar esportivo.
-const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk" });
+// Números e títulos (placar/KPIs): grotesca bem encorpada, no espírito de um
+// placar esportivo — contraste deliberado com a Inter do corpo/UI. Direção
+// visual "Grotesk Impacto" escolhida pelo usuário entre as 3 opções mostradas.
+const grotesk = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-grotesk",
+});
 
 export const metadata: Metadata = {
   title: "PropsEdge — Análise de Player Props",

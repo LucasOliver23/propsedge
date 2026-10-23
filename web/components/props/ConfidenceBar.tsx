@@ -13,7 +13,10 @@ export function ConfidenceBar({ value, compact = false }: { value: number; compa
         <span className="absolute inset-y-0 left-1/2 w-px bg-white/25" />
         <span
           className={clsx("block h-full rounded-full transition-[width] duration-500", tone.bar)}
-          style={{ width: `${value}%` }}
+          style={{
+            width: `${value}%`,
+            boxShadow: value >= 70 ? "0 0 10px 1px rgba(34,224,114,0.65)" : undefined,
+          }}
         />
       </div>
       <span className={clsx("w-9 text-right font-display text-sm font-semibold tabular-nums", tone.text)}>{value}%</span>

@@ -192,13 +192,14 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
   return (
     <div className={clsx("mx-auto max-w-[1400px] space-y-5 px-4 py-6", multiples.size > 0 && "pb-28")}>
       {/* Placar do dia */}
-      <section className="grid grid-cols-2 divide-y divide-line rounded-xl border border-line bg-surface sm:grid-cols-4 sm:divide-y-0 sm:divide-x">
+      <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
         <Kpi icon={<Target className="h-4 w-4" />} label="Props hoje" value={base.length.toLocaleString("pt-BR")} />
         <Kpi
           icon={<Flame className="h-4 w-4" />}
           label="Alertas EV+"
           value={isPremium ? String(evCount) : "Pro"}
           tone="text-brand-300"
+          highlight
         />
         <Kpi
           icon={<SlidersHorizontal className="h-4 w-4" />}
@@ -238,12 +239,12 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
               }}
               title={locked ? "Recurso Pro" : undefined}
               className={clsx(
-                "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
+                "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold transition",
                 locked
                   ? "cursor-not-allowed border-line text-slate-600"
                   : view === "board" && preset === p.key
-                    ? "border-brand-400 bg-brand-500/15 text-brand-200"
-                    : "border-line text-slate-300 hover:border-slate-500",
+                    ? "border-brand-400 bg-brand-400 text-bg shadow-[0_0_16px_1px_rgba(34,224,114,0.45)]"
+                    : "border-line font-medium text-slate-300 hover:border-slate-500",
               )}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -406,11 +407,26 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
 }
 
 // ------------------------------------------------------------------ UI local
-function Kpi({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: string }) {
+function Kpi({
+  icon,
+  label,
+  value,
+  tone,
+  highlight,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone?: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className="p-4">
-      <p className="flex items-center gap-1.5 text-xs text-slate-500">{icon}{label}</p>
-      <p className={clsx("mt-1 font-display text-2xl font-bold tabular-nums", tone ?? "text-slate-100")}>{value}</p>
+    <div className={clsx("bg-surface p-4", highlight && "shadow-[inset_0_0_0_1px_rgba(34,224,114,0.35)]")}>
+      <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        {icon}
+        {label}
+      </p>
+      <p className={clsx("mt-1 font-display text-3xl font-extrabold tabular-nums", tone ?? "text-slate-100")}>{value}</p>
     </div>
   );
 }
