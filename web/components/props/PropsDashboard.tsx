@@ -7,7 +7,7 @@ import { Flame, RefreshCw, Search, SlidersHorizontal, Target, Wallet } from "luc
 import { usePropsBoard } from "@/hooks/usePropsBoard";
 import { useTrackedBets } from "@/hooks/useTrackedBets";
 import { SPORTS } from "@/lib/constants";
-import { brl } from "@/lib/format";
+import { brl, kickoff } from "@/lib/format";
 import type { PropRow, Side, SportId } from "@/lib/types";
 import { MultiplesBar } from "./MultiplesBar";
 import { GRID, PropRowItem } from "./PropRowItem";
@@ -56,6 +56,9 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
   const [expanded, setExpanded] = useState<string | null>(null);
   const [multiples, setMultiples] = useState<Map<string, PropRow>>(new Map());
   const [view, setView] = useState<"board" | "multiplas">("board");
+  const [homeAway, setHomeAway] = useState<"all" | "home" | "away">("all");
+  const [period, setPeriod] = useState<"all" | "today" | "tomorrow">("all");
+  const [selectedGames, setSelectedGames] = useState<Set<number>>(new Set());
   const search = useDeferredValue(query.trim().toLowerCase());
 
   // Por padrão mostramos só o lado mais forte de cada mercado
@@ -81,6 +84,25 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
     return Array.from(m.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   }, [base, sport]);
 
+  /** Jogos do dia (estilo painel "JOGOS" do PropsBR) — um chip por partida,
+   * derivado das próprias props (casa/fora a partir do ponto de vista de quem
+   * é titular em cada linha), para filtrar o board por confronto específico. */
+  const gamesList = useMemo(() => {
+    const m = new Map<number, { id: number; home: string; away: string; start: string }>();
+    for (const r of base) {
+      if (sport !== "all" && r.sport_id !== sport) continue;
+      if (m.has(r.game_id)) continue;
+      const home = r.is_home ? r.team_abbr : r.opp_abbr;
+      const away = r.is_home ? r.opp_abbr : r.team_abbr;
+      m.set(r.game_id, { id: r.game_id, home: home ?? "?", away: away ?? "?", start: r.start_time });
+    }
+    return Array.from(m.values()).sort((a, b) => +new Date(a.start) - +new Date(b.start));
+  }, [base, sport]);
+
+  const dayKey = (iso: string) => new Date(iso).toDateString();
+  const today = dayKey(new Date().toISOString());
+  const tomorrow = dayKey(new Date(Date.now() + 86400000).toISOString());
+
   const filtered = useMemo(() => {
     const out = base.filter(
       (r) =>
@@ -88,6 +110,9 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         (stat === "all" || r.stat_key === stat) &&
         r.confidence >= minConf &&
         (!evOnly || (r.ev ?? -1) >= 0.03) &&
+        (homeAway === "all" || (homeAway === "home" ? r.is_home : !r.is_home)) &&
+        (period === "all" || dayKey(r.start_time) === (period === "today" ? today : tomorrow)) &&
+        (selectedGames.size === 0 || selectedGames.has(r.game_id)) &&
         (!search ||
           r.player_name.toLowerCase().includes(search) ||
           r.team_abbr?.toLowerCase().includes(search) ||
@@ -102,7 +127,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
       score: (a, b) => propScore(b) - propScore(a),
     };
     return out.sort(sorters[sort]);
-  }, [base, sport, stat, minConf, evOnly, search, sort]);
+  }, [base, sport, stat, minConf, evOnly, search, sort, homeAway, period, selectedGames, today, tomorrow]);
 
   /** Aba "Múltiplas": em vez de filtrar o board, mostra só as pernas já
    * selecionadas (igual ao painel "Multiple NBA" do PropsBR). */
@@ -131,6 +156,15 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
       const next = new Map(m);
       if (next.has(key)) next.delete(key);
       else next.set(key, row);
+      return next;
+    });
+  }, []);
+
+  const toggleGame = useCallback((id: number) => {
+    setSelectedGames((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }, []);
@@ -211,17 +245,47 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
 
       {/* Esportes */}
       <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Esportes">
-        <SportChip active={sport === "all"} onClick={() => { setSport("all"); setStat("all"); }} label="Todos" count={base.length} />
+        <SportChip active={sport === "all"} onClick={() => { setSport("all"); setStat("all"); setSelectedGames(new Set()); }} label="Todos" count={base.length} />
         {SPORTS.map((s) => (
           <SportChip
             key={s.id}
             active={sport === s.id}
-            onClick={() => { setSport(s.id); setStat("all"); setLimit(PAGE); }}
+            onClick={() => { setSport(s.id); setStat("all"); setLimit(PAGE); setSelectedGames(new Set()); }}
             label={`${s.emoji} ${s.label}`}
             count={sportCounts[s.id] ?? 0}
           />
         ))}
       </nav>
+
+      {/* Jogos do dia — filtra o board por confronto específico (painel "Jogos" do PropsBR) */}
+      {gamesList.length > 0 && (
+        <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Jogos">
+          {gamesList.map((g) => {
+            const active = selectedGames.has(g.id);
+            return (
+              <button
+                key={g.id}
+                onClick={() => toggleGame(g.id)}
+                className={clsx(
+                  "flex shrink-0 flex-col items-start rounded-lg border px-3 py-1.5 text-xs transition",
+                  active ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
+                )}
+              >
+                <span className="font-semibold">{g.home} vs {g.away}</span>
+                <span className="text-slate-500">{kickoff(g.start)}</span>
+              </button>
+            );
+          })}
+          {selectedGames.size > 0 && (
+            <button
+              onClick={() => setSelectedGames(new Set())}
+              className="shrink-0 self-center rounded-lg px-2 text-xs text-slate-500 underline hover:text-slate-300"
+            >
+              limpar
+            </button>
+          )}
+        </nav>
+      )}
 
       {/* Filtros rápidos */}
       <section className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
@@ -258,6 +322,34 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
 
         <Toggle checked={evOnly} onChange={setEvOnly} label="Só EV+" disabled={!isPremium} />
         <Toggle checked={bothSides} onChange={setBothSides} label="Mostrar Mais/Menos" />
+
+        {/* Localização (Casa/Fora) */}
+        <div className="flex overflow-hidden rounded-lg border border-line text-xs">
+          {([["all", "Todos"], ["home", "Casa"], ["away", "Fora"]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setHomeAway(v)}
+              className={clsx(
+                "px-2.5 py-2 font-medium transition",
+                homeAway === v ? "bg-brand-500/15 text-brand-200" : "text-slate-400 hover:bg-white/5",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Período */}
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as typeof period)}
+          className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-brand-400"
+          aria-label="Período"
+        >
+          <option value="all">Qualquer dia</option>
+          <option value="today">Hoje</option>
+          <option value="tomorrow">Amanhã</option>
+        </select>
 
         <select
           value={sort}
