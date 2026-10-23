@@ -287,6 +287,31 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         </nav>
       )}
 
+      {/* Mercados — botões horizontais (igual à linha de mercados do PropsBR) */}
+      <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Mercados">
+        <button
+          onClick={() => setStat("all")}
+          className={clsx(
+            "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+            stat === "all" ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
+          )}
+        >
+          Todos os mercados
+        </button>
+        {statOptions.map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setStat(k)}
+            className={clsx(
+              "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+              stat === k ? "border-brand-400 bg-brand-500/15 text-brand-200" : "border-line text-slate-300 hover:border-slate-500",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
       {/* Filtros rápidos */}
       <section className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
         <div className="relative min-w-[200px] flex-1">
@@ -298,18 +323,6 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
             className="w-full rounded-lg border border-line bg-bg py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-400"
           />
         </div>
-
-        <select
-          value={stat}
-          onChange={(e) => setStat(e.target.value)}
-          className="rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-brand-400"
-          aria-label="Mercado"
-        >
-          <option value="all">Todos os mercados</option>
-          {statOptions.map(([k, label]) => (
-            <option key={k} value={k}>{label}</option>
-          ))}
-        </select>
 
         <label className="flex items-center gap-2 text-sm text-slate-300">
           Confiança ≥ <b className="w-8 tabular-nums">{minConf}%</b>
