@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase/client";
 import { rpcErrorMessage } from "@/lib/constants";
@@ -9,6 +9,12 @@ import type { Profile, Side, TrackedBet } from "@/lib/types";
 /** Usuário, bankroll e bilheteira — com Realtime em tracked_bets (Green/Red chega sozinho). */
 export function useTrackedBets() {
   const supabase = getSupabase();
+  // Esse hook é chamado por vários componentes ao mesmo tempo (Navbar/AccountMenu,
+  // PropsDashboard, TeamBoard, BetSlip, LiveTracker...). Cada chamada precisa do seu
+  // próprio canal Realtime — dois canais com o MESMO tópico colidem no cliente do
+  // Supabase e derrubam a página com "cannot add postgres_changes callbacks ...
+  // after subscribe()". O sufixo de useId() torna o tópico único por instância.
+  const instanceId = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [bets, setBets] = useState<TrackedBet[]>([]);
@@ -43,13 +49,13 @@ export function useTrackedBets() {
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel(`bets-${user.id}`)
+      .channel(`bets-${user.id}-${instanceId}`)
       .on("postgres_changes",
         { event: "*", schema: "public", table: "tracked_bets", filter: `user_id=eq.${user.id}` },
         () => load(user.id))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [supabase, user, load]);
+  }, [supabase, user, load, instanceId]);
 
   /** chave `${market_id}:${side}` das apostas abertas — para marcar o botão "fixado" */
   const pinned = useMemo(
