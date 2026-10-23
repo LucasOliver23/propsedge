@@ -7,6 +7,7 @@ import { BOOK_LABELS } from "@/lib/constants";
 import { kickoff, odds as fmtOdds, pct, signedPct } from "@/lib/format";
 import type { PropRow } from "@/lib/types";
 import { ConfidenceBar } from "./ConfidenceBar";
+import { ConfidenceBreakdown } from "./ConfidenceBreakdown";
 import { DvpBadge, HitRate } from "./HitRate";
 import { L10Chart } from "./L10Chart";
 import { OddsComparison } from "./OddsComparison";
@@ -159,6 +160,9 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
             />
             <Stat label="Atualizado" value={new Date(row.computed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} />
           </dl>
+          <div className="md:col-span-3">
+            <ConfidenceBreakdown row={row} />
+          </div>
         </div>
       )}
     </li>
