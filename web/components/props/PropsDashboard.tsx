@@ -14,6 +14,17 @@ import { GRID, PropRowItem } from "./PropRowItem";
 type SortKey = "confidence" | "ev" | "l10" | "time";
 const PAGE = 60;
 
+/** Atalhos de uma rankeada pronta, no estilo das abas do PropsBR (10 Melhores,
+ * Top Confiança, Top Vantagem...). Cada um só ajusta sort/minConf/evOnly —
+ * os filtros avançados continuam disponíveis para afinar depois. */
+const PRESETS = [
+  { key: "melhor", label: "Melhor do dia", sort: "confidence" as SortKey, minConf: 0, evOnly: false },
+  { key: "confianca", label: "Top Confiança", sort: "confidence" as SortKey, minConf: 70, evOnly: false },
+  { key: "vantagem", label: "Top Vantagem", sort: "ev" as SortKey, minConf: 0, evOnly: true, pro: true },
+  { key: "quente", label: "Quente (L10)", sort: "l10" as SortKey, minConf: 0, evOnly: false },
+  { key: "oportunidades", label: "Oportunidades", sort: "ev" as SortKey, minConf: 55, evOnly: false },
+] as const;
+
 export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }) {
   const router = useRouter();
   const { rows, loading, error, updatedAt, reload } = usePropsBoard(initialRows);
@@ -27,6 +38,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
   const [evOnly, setEvOnly] = useState(false);
   const [bothSides, setBothSides] = useState(false);
   const [sort, setSort] = useState<SortKey>("confidence");
+  const [preset, setPreset] = useState<string>("melhor");
   const [limit, setLimit] = useState(PAGE);
   const [expanded, setExpanded] = useState<string | null>(null);
   const search = useDeferredValue(query.trim().toLowerCase());
@@ -122,6 +134,36 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
           calcula como ~50/50 e a odd mostrada é a <b>odd justa</b>. Compare com a odd da sua casa antes de entrar.
         </p>
       )}
+
+      {/* Rankeadas prontas */}
+      <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Rankeadas">
+        {PRESETS.map((p) => {
+          const locked = "pro" in p && p.pro && !isPremium;
+          return (
+            <button
+              key={p.key}
+              disabled={locked}
+              onClick={() => {
+                setPreset(p.key);
+                setSort(p.sort);
+                setMinConf(p.minConf);
+                setEvOnly(p.evOnly);
+              }}
+              title={locked ? "Recurso Pro" : undefined}
+              className={clsx(
+                "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
+                locked
+                  ? "cursor-not-allowed border-line text-slate-600"
+                  : preset === p.key
+                    ? "border-sky-400 bg-sky-500/15 text-sky-200"
+                    : "border-line text-slate-300 hover:border-slate-500",
+              )}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Esportes */}
       <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Esportes">
