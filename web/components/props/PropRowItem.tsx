@@ -9,6 +9,7 @@ import type { PropRow } from "@/lib/types";
 import { ConfidenceBar } from "./ConfidenceBar";
 import { ConfidenceBreakdown } from "./ConfidenceBreakdown";
 import { DvpBadge, HitRate } from "./HitRate";
+import { InjuryImpact } from "./InjuryImpact";
 import { L10Chart } from "./L10Chart";
 import { OddsComparison } from "./OddsComparison";
 import { PinButton } from "./PinButton";
@@ -162,6 +163,14 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin 
           </dl>
           <div className="md:col-span-3">
             <ConfidenceBreakdown row={row} />
+          </div>
+          <div className="md:col-span-3">
+            <InjuryImpact
+              teamAbbr={row.team_abbr}
+              oppAbbr={row.opp_abbr}
+              teamInjuries={row.team_injuries}
+              oppInjuries={row.opp_injuries}
+            />
           </div>
         </div>
       )}

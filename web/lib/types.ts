@@ -53,6 +53,15 @@ export interface PropRow {
   injury_detail: string | null;
   confirmed_starter: boolean;          // titular confirmado / arremessador provável
   batting_order: number | null;        // MLB: posição na ordem de rebatedores (1-9)
+  team_injuries: TeammateInjury[] | null;  // desfalques do time do jogador (exclui ele mesmo)
+  opp_injuries: TeammateInjury[] | null;   // desfalques do time adversário
+}
+
+export interface TeammateInjury {
+  name: string;
+  position: string | null;
+  status: string;   // Out, Questionable, 15-Day-IL, Day-To-Day...
+  detail: string | null;
 }
 
 /** Linha da view `v_my_bets` */
