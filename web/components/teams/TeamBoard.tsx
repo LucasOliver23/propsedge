@@ -7,7 +7,7 @@ import { ChevronDown, Search, Shield } from "lucide-react";
 import { useTeamBoard } from "@/hooks/useTeamBoard";
 import { useTrackedBets } from "@/hooks/useTrackedBets";
 import { SPORTS } from "@/lib/constants";
-import { kickoff } from "@/lib/format";
+import { brDateKey, kickoff } from "@/lib/format";
 import { leagueName } from "@/lib/leagues";
 import type { SportId, Subject, TeamMarketRow } from "@/lib/types";
 import { TeamMarketCard } from "./TeamMarketCard";
@@ -15,6 +15,8 @@ import { ScoreRing, TeamLogo } from "./Widgets";
 
 const PAGE = 50;
 const key = (r: TeamMarketRow) => `${r.game_id}:${r.subject}:${r.stat_key}`;
+
+type Period = "all" | "today" | "tomorrow";
 
 /** Mercados de TIME e de JOGO: escanteios, gols, 1º tempo, faltas, chutes, cartões, pontos por quarto… */
 export function TeamBoard() {
@@ -26,6 +28,7 @@ export function TeamBoard() {
   const [league, setLeague] = useState("all");
   const [market, setMarket] = useState("all");
   const [subject, setSubject] = useState<"all" | "team" | "match">("all");
+  const [period, setPeriod] = useState<Period>("all");
   const [minScore, setMinScore] = useState(60);
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(PAGE);
@@ -48,14 +51,34 @@ export function TeamBoard() {
     return Array.from(m.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   }, [rows, sport]);
 
+  // Mesma lógica de "Hoje"/"Amanhã" usada no filtro de período dos Props (FiltersSidebar),
+  // pra não ficar com o quadro vazio quando não há jogo hoje e não existir onde filtrar.
+  const todayKey = brDateKey(new Date().toISOString());
+  const tomorrowKey = brDateKey(new Date(Date.now() + 86400000).toISOString());
+
   const filtered = useMemo(() => rows.filter((r) =>
     (sport === "all" || r.sport_id === sport) &&
     (league === "all" || r.league_slug === league) &&
     (market === "all" || r.stat_key === market) &&
     (subject === "all" || (subject === "match" ? r.subject === "match" : r.subject !== "match")) &&
+    (period === "all" || brDateKey(r.start_time) === (period === "today" ? todayKey : tomorrowKey)) &&
     r.score >= minScore &&
     (!q || `${r.home_name} ${r.away_name} ${r.team_name ?? ""}`.toLowerCase().includes(q)),
-  ), [rows, sport, league, market, subject, minScore, q]);
+  ), [rows, sport, league, market, subject, period, todayKey, tomorrowKey, minScore, q]);
+
+  const periodCounts = useMemo(() => {
+    const base = rows.filter((r) =>
+      (sport === "all" || r.sport_id === sport) &&
+      (league === "all" || r.league_slug === league) &&
+      (market === "all" || r.stat_key === market) &&
+      (subject === "all" || (subject === "match" ? r.subject === "match" : r.subject !== "match")),
+    );
+    return {
+      all: base.length,
+      today: base.filter((r) => brDateKey(r.start_time) === todayKey).length,
+      tomorrow: base.filter((r) => brDateKey(r.start_time) === tomorrowKey).length,
+    };
+  }, [rows, sport, league, market, subject, todayKey, tomorrowKey]);
 
   async function pin(r: TeamMarketRow, a: { side: "over" | "under"; line: number; odds: number; stake: number }) {
     if (!user) { router.push("/login?next=/times"); throw new Error("Entre na sua conta para fixar."); }
@@ -91,6 +114,21 @@ export function TeamBoard() {
         <Select value={market} onChange={setMarket} options={[["all", "Todos os mercados"], ...markets]} />
         <Select value={subject} onChange={(v) => setSubject(v as typeof subject)}
           options={[["all", "Time + Jogo"], ["team", "Só time"], ["match", "Só jogo (total)"]]} />
+        <div className="flex overflow-hidden rounded-lg border border-line text-xs">
+          {([["all", "Qualquer dia"], ["today", "Hoje"], ["tomorrow", "Amanhã"]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setPeriod(v)}
+              className={clsx(
+                "flex items-center gap-1.5 px-2.5 py-2 font-medium transition",
+                period === v ? "bg-brand-500/15 text-brand-200" : "text-slate-400 hover:bg-white/5",
+              )}
+            >
+              {label}
+              <span className="rounded-full bg-white/5 px-1.5 text-[11px] tabular-nums">{periodCounts[v]}</span>
+            </button>
+          ))}
+        </div>
         <label className="flex items-center gap-2 text-sm text-slate-300">
           Score ≥ <b className="w-7 tabular-nums">{minScore}</b>
           <input type="range" min={0} max={90} step={5} value={minScore} onChange={(e) => setMinScore(Number(e.target.value))} className="accent-brand-400" />
@@ -101,7 +139,10 @@ export function TeamBoard() {
       {loading && <p className="text-sm text-slate-400">Carregando…</p>}
       {!loading && !filtered.length && (
         <p className="rounded-xl border border-line bg-surface p-10 text-center text-sm text-slate-400">
-          Nenhum mercado com esses filtros. Tente baixar o score mínimo.
+          Nenhum mercado com esses filtros.{" "}
+          {period !== "all"
+            ? "Tente \"Qualquer dia\" — pode não ter jogo nesse dia pra esse esporte/liga."
+            : "Tente baixar o score mínimo."}
         </p>
       )}
 
