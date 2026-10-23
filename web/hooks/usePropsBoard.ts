@@ -13,7 +13,15 @@ export function usePropsBoard(initial: PropRow[] = []) {
   const [rows, setRows] = useState<PropRow[]>(initial);
   const [loading, setLoading] = useState(initial.length === 0);
   const [error, setError] = useState<string | null>(null);
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(initial.length ? new Date() : null);
+  // Começa null nos dois lados (servidor e cliente) de propósito: se desse new Date() aqui,
+  // o valor renderizado na primeira pintura do servidor (SSR) e do navegador seriam instantes
+  // diferentes (e em fusos diferentes) — React detecta a divergência e quebra a hidratação.
+  // Setamos o valor de verdade só depois de montar, com useEffect (só roda no cliente).
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (initial.length) setUpdatedAt(new Date());
+  }, [initial.length]);
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   const load = useCallback(async () => {

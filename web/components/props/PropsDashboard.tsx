@@ -7,7 +7,7 @@ import { Flame, RefreshCw, Search, SlidersHorizontal, Target, Wallet } from "luc
 import { usePropsBoard } from "@/hooks/usePropsBoard";
 import { useTrackedBets } from "@/hooks/useTrackedBets";
 import { SPORTS } from "@/lib/constants";
-import { brl, kickoff } from "@/lib/format";
+import { brDateKey, brl, kickoff } from "@/lib/format";
 import type { PropRow, Side, SportId } from "@/lib/types";
 import { MultiplesBar } from "./MultiplesBar";
 import { GRID, PropRowItem } from "./PropRowItem";
@@ -99,9 +99,9 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
     return Array.from(m.values()).sort((a, b) => +new Date(a.start) - +new Date(b.start));
   }, [base, sport]);
 
-  const dayKey = (iso: string) => new Date(iso).toDateString();
-  const today = dayKey(new Date().toISOString());
-  const tomorrow = dayKey(new Date(Date.now() + 86400000).toISOString());
+  // Fuso fixo (America/Sao_Paulo) pra não divergir entre o render do servidor e do navegador.
+  const today = brDateKey(new Date().toISOString());
+  const tomorrow = brDateKey(new Date(Date.now() + 86400000).toISOString());
 
   const filtered = useMemo(() => {
     const out = base.filter(
@@ -111,7 +111,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         r.confidence >= minConf &&
         (!evOnly || (r.ev ?? -1) >= 0.03) &&
         (homeAway === "all" || (homeAway === "home" ? r.is_home : !r.is_home)) &&
-        (period === "all" || dayKey(r.start_time) === (period === "today" ? today : tomorrow)) &&
+        (period === "all" || brDateKey(r.start_time) === (period === "today" ? today : tomorrow)) &&
         (selectedGames.size === 0 || selectedGames.has(r.game_id)) &&
         (!search ||
           r.player_name.toLowerCase().includes(search) ||

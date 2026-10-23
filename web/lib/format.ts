@@ -9,12 +9,21 @@ export const signedPct = (n: number | null | undefined, digits = 1) =>
 
 export const odds = (n: number | null | undefined) => (n == null ? "—" : n.toFixed(2));
 
+// Fuso fixo (Brasil não tem mais horário de verão): formata igual no servidor (SSR, UTC)
+// e no navegador do usuário, senão o texto diverge entre os dois e o React quebra a
+// hidratação (erro #425) — foi exatamente isso que aconteceu antes dessa correção.
+const TZ = "America/Sao_Paulo";
+
+/** Data (YYYY-MM-DD) no fuso de Brasília, sem depender do fuso da máquina que roda o código. */
+export function brDateKey(iso: string) {
+  return new Date(iso).toLocaleDateString("en-CA", { timeZone: TZ }); // en-CA = formato ISO yyyy-mm-dd
+}
+
 export function kickoff(iso: string) {
   const d = new Date(iso);
-  const today = new Date();
-  const sameDay = d.toDateString() === today.toDateString();
-  const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  return sameDay ? `Hoje ${time}` : `${d.toLocaleDateString("pt-BR", { weekday: "short" })} ${time}`;
+  const sameDay = brDateKey(iso) === brDateKey(new Date().toISOString());
+  const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+  return sameDay ? `Hoje ${time}` : `${d.toLocaleDateString("pt-BR", { weekday: "short", timeZone: TZ })} ${time}`;
 }
 
 /** Cor da confiança: vermelho < 45 < âmbar < 60 < verde */
