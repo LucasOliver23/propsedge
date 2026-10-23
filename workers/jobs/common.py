@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import logging
 
-from config import SPORTS
+from config import SPORTS, USE_API_FOOTBALL
 from db import get_or_create_player, get_or_create_team, upsert
 from providers.base import NBoxScore, NGame, StatsProvider
 from providers.espn import ESPNProvider
@@ -17,11 +17,29 @@ _cache: dict[str, StatsProvider] = {}
 _RANK = {"scheduled": 0, "postponed": 0, "live": 1, "final": 2, "cancelled": 2}
 
 
-def provider_for(sport_id: str) -> StatsProvider:
-    kind = SPORTS[sport_id].stats_provider
+def _build(kind: str) -> StatsProvider:
     if kind not in _cache:
-        _cache[kind] = {"espn": ESPNProvider, "pandascore": PandaScoreProvider, "tennis": TennisProvider}[kind]()
+        if kind == "api_football":
+            from providers.api_football import ApiFootballProvider
+            _cache[kind] = ApiFootballProvider()
+        else:
+            _cache[kind] = {"espn": ESPNProvider, "pandascore": PandaScoreProvider, "tennis": TennisProvider}[kind]()
     return _cache[kind]
+
+
+def provider_for(sport_id: str) -> StatsProvider:
+    """Schedule/boxscore de futebol vão pra API-Football só se USE_API_FOOTBALL=true
+    (ver providers/api_football.py) — por padrão, e pra todo o resto, segue a config normal.
+    Use context_provider_for() para o contexto pré-jogo (lesões/escalação/classificação),
+    que continua sempre na ESPN mesmo com a API-Football ligada."""
+    kind = "api_football" if (sport_id == "soccer" and USE_API_FOOTBALL) else SPORTS[sport_id].stats_provider
+    return _build(kind)
+
+
+def context_provider_for(sport_id: str) -> StatsProvider:
+    """Mesma config de sempre, ignorando USE_API_FOOTBALL — o contexto (lesões, escalação
+    confirmada, classificação) é um dado gratuito e já funciona bem via ESPN."""
+    return _build(SPORTS[sport_id].stats_provider)
 
 
 def parse_minute(clock: str | None) -> float | None:

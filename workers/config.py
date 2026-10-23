@@ -20,6 +20,15 @@ ODDS_REFRESH_MINUTES = int(os.getenv("ODDS_REFRESH_MINUTES", "180"))  # não reb
 ODDS_MIN_REMAINING = int(os.getenv("ODDS_MIN_REMAINING", "25"))      # para de buscar abaixo desse saldo
 LIVE_POLL_SECONDS = int(os.getenv("LIVE_POLL_SECONDS", "20"))
 
+# Futebol: por padrão o schedule/boxscore usam a ESPN (grátis). API-Football
+# (api-sports.io) é uma fonte paga opcional com estatísticas mais ricas de
+# jogador (chutes, finalizações, duelos...) — fica pronta mas DESLIGADA até
+# as duas variáveis abaixo serem setadas. O contexto pré-jogo (lesões,
+# escalação confirmada, classificação) continua sempre vindo da ESPN, mesmo
+# com a API-Football ligada só pra schedule/boxscore.
+API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "")
+USE_API_FOOTBALL = os.getenv("USE_API_FOOTBALL", "false").lower() == "true"
+
 
 @dataclass(frozen=True)
 class SportCfg:

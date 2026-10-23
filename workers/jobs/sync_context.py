@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import date
 
 from db import connect
-from jobs.common import log, provider_for
+from jobs.common import context_provider_for, log
 from providers.espn import injury_level
 
 CONTEXT_HOURS = 36
@@ -143,7 +143,7 @@ def _context(conn, prov, sport_id: str) -> tuple[int, int, int]:
 def run(sports: list[str]) -> None:
     for sport_id in sports:
         try:
-            prov = provider_for(sport_id)
+            prov = context_provider_for(sport_id)
         except Exception:
             continue
         if not hasattr(prov, "standings"):
