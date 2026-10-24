@@ -41,14 +41,16 @@ function propScore(r: PropRow): number {
  * 10 Melhores, Top Confiança, Top Vantagem, Top Score, Oportunidades, Múltiplas).
  * Cada um só ajusta sort/minConf/evOnly/limit — os filtros avançados continuam
  * disponíveis para afinar depois. */
+// Cada rankeada com sua própria cor (igual ao visual do PropsBR: cada aba tem
+// uma cor própria, e a selecionada vira um bloco sólido daquela cor).
 const PRESETS = [
-  { key: "melhor", label: "Melhor do dia", icon: Star, sort: "confidence" as SortKey, minConf: 0, evOnly: false },
-  { key: "melhores", label: "10 Melhores", icon: Layers, sort: "confidence" as SortKey, minConf: 0, evOnly: false, limit: 10 },
-  { key: "confianca", label: "Top Confiança", icon: ShieldCheck, sort: "confidence" as SortKey, minConf: 70, evOnly: false },
-  { key: "vantagem", label: "Top Vantagem", icon: TrendingUp, sort: "ev" as SortKey, minConf: 0, evOnly: true, pro: true },
-  { key: "score", label: "Top Score", icon: Rocket, sort: "score" as SortKey, minConf: 0, evOnly: false },
-  { key: "quente", label: "Quente (L10)", icon: Flame, sort: "l10" as SortKey, minConf: 0, evOnly: false },
-  { key: "oportunidades", label: "Oportunidades", icon: Sparkles, sort: "ev" as SortKey, minConf: 55, evOnly: false },
+  { key: "melhor", label: "Melhor do dia", icon: Star, sort: "confidence" as SortKey, minConf: 0, evOnly: false, color: "#F2B93D" },
+  { key: "melhores", label: "10 Melhores", icon: Layers, sort: "confidence" as SortKey, minConf: 0, evOnly: false, limit: 10, color: "#F2994A" },
+  { key: "confianca", label: "Top Confiança", icon: ShieldCheck, sort: "confidence" as SortKey, minConf: 70, evOnly: false, color: "#EF5DA8" },
+  { key: "vantagem", label: "Top Vantagem", icon: TrendingUp, sort: "ev" as SortKey, minConf: 0, evOnly: true, pro: true, color: "#34C77B" },
+  { key: "score", label: "Top Score", icon: Rocket, sort: "score" as SortKey, minConf: 0, evOnly: false, color: "#3B9EFF" },
+  { key: "quente", label: "Quente (L10)", icon: Flame, sort: "l10" as SortKey, minConf: 0, evOnly: false, color: "#FF6B4A" },
+  { key: "oportunidades", label: "Oportunidades", icon: Sparkles, sort: "ev" as SortKey, minConf: 55, evOnly: false, color: "#9B6BFF" },
 ] as const;
 
 export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }) {
@@ -225,6 +227,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         {PRESETS.map((p) => {
           const locked = "pro" in p && p.pro && !isPremium;
           const Icon = p.icon;
+          const active = view === "board" && preset === p.key;
           return (
             <button
               key={p.key}
@@ -238,13 +241,16 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
                 setLimit("limit" in p ? p.limit : PAGE);
               }}
               title={locked ? "Recurso Pro" : undefined}
-              className={clsx(
-                "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold transition",
+              style={
                 locked
-                  ? "cursor-not-allowed border-line text-slate-600"
-                  : view === "board" && preset === p.key
-                    ? "border-brand-400 bg-brand-400 text-bg shadow-[0_0_16px_1px_rgba(34,224,114,0.45)]"
-                    : "border-line font-medium text-slate-300 hover:border-slate-500",
+                  ? undefined
+                  : active
+                    ? { backgroundColor: p.color, borderColor: p.color, color: "#0A0E14", boxShadow: `0 0 18px 1px ${p.color}73` }
+                    : { borderColor: `${p.color}55`, color: p.color }
+              }
+              className={clsx(
+                "font-display flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-extrabold italic uppercase tracking-tight transition",
+                locked ? "cursor-not-allowed border-line text-slate-600" : "hover:brightness-110",
               )}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -254,12 +260,8 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
         })}
         <button
           onClick={() => setView("multiplas")}
-          className={clsx(
-            "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition",
-            view === "multiplas"
-              ? "border-violet-400 bg-violet-500/15 text-violet-200"
-              : "border-line text-slate-300 hover:border-slate-500",
-          )}
+          style={view === "multiplas" ? { backgroundColor: "#8B5CF6", borderColor: "#8B5CF6", color: "#0A0E14" } : { borderColor: "#8B5CF655", color: "#8B5CF6" }}
+          className="font-display flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-extrabold italic uppercase tracking-tight transition hover:brightness-110"
         >
           <Layers className="h-3.5 w-3.5" />
           Múltiplas{multiples.size > 0 ? ` (${multiples.size})` : ""}

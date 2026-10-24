@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Inter } from "next/font/google";
+import { Archivo, Inter } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-// Números e títulos (placar/KPIs): grotesca bem encorpada, no espírito de um
-// placar esportivo — contraste deliberado com a Inter do corpo/UI. Direção
-// visual "Grotesk Impacto" escolhida pelo usuário entre as 3 opções mostradas.
-const grotesk = Bricolage_Grotesque({
+// Letreiro em itálico bold condensado, no espírito das abas/rótulos do PropsBR
+// (pedido explícito do usuário: "quero as letras nesse formato do propsbr") —
+// contraste deliberado com a Inter do corpo/UI.
+const grotesk = Archivo({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["700", "800", "900"],
+  style: ["normal", "italic"],
   variable: "--font-grotesk",
 });
 
