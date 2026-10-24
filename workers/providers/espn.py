@@ -270,6 +270,7 @@ class ESPNProvider:
                     player_ext=str(ath["id"]), player_name=ath["displayName"], team_ext=team_ext,
                     position=(entry.get("position") or {}).get("abbreviation"),
                     minutes=None, dnp=not played, stats=stats,
+                    headshot=(ath.get("headshot") or {}).get("href"),
                 )
 
     # ------------------------------------------------------ classificação (tabela)
