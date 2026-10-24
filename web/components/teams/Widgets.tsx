@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { useState } from "react";
 import type { SeriesPoint, Side } from "@/lib/types";
 
 /** Anel de score 0-100 */
@@ -74,9 +75,21 @@ export function SeriesChart({ points, line, side }: { points: SeriesPoint[]; lin
 }
 
 export function TeamLogo({ src, alt, size = 40 }: { src: string | null; alt: string; size?: number }) {
-  return src ? (
+  // Alguns escudos não existem mais no CDN da ESPN (404/500) — sem isso o
+  // navegador mostra o ícone de imagem quebrada em vez de cair pro placeholder
+  // com as iniciais, que já existe exatamente pra esse caso.
+  const [broken, setBroken] = useState(false);
+  return src && !broken ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} width={size} height={size} className="shrink-0 object-contain" loading="lazy" />
+    <img
+      src={src}
+      alt={alt}
+      width={size}
+      height={size}
+      className="shrink-0 object-contain"
+      loading="lazy"
+      onError={() => setBroken(true)}
+    />
   ) : (
     <span className="flex shrink-0 items-center justify-center rounded-full bg-elevated text-xs font-bold text-slate-400"
       style={{ width: size, height: size }}>{alt.slice(0, 3).toUpperCase()}</span>
