@@ -60,7 +60,7 @@ export function RoundRecap() {
   return (
     <div className="mx-auto max-w-5xl space-y-5 px-4 py-6">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-lg font-bold text-white">Resultados da rodada</h1>
+        <h1 className="font-display mr-auto text-lg font-bold italic text-white">Resultados da rodada</h1>
         {day && total > 0 && (
           <ShareButton filename={`propsedge-rodada-${day}`} render={(format) => (
             <RecapArt format={format} markets={markets} total={total} greens={greens}

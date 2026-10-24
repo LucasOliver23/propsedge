@@ -154,7 +154,7 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin,
             </button>
           )}
           <PinButton pinned={pinned} disabled={started} defaultStake={defaultStake} onConfirm={onPin} />
-          <ChevronDown className={clsx("hidden h-4 w-4 text-slate-500 transition md:block", expanded && "rotate-180")} />
+          <ChevronDown className={clsx("h-4 w-4 shrink-0 text-slate-500 transition", expanded && "rotate-180")} />
         </div>
       </div>
 

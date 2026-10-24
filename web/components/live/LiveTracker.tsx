@@ -80,7 +80,7 @@ export function LiveTracker() {
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
       <section>
-        <h1 className="mb-3 flex items-center gap-2 text-lg font-bold text-slate-100">
+        <h1 className="font-display mb-3 flex items-center gap-2 text-lg font-bold italic text-slate-100">
           <Radio className="h-5 w-5 animate-pulse text-rose-400" /> Ao vivo e próximas
         </h1>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

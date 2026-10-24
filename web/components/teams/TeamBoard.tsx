@@ -92,7 +92,7 @@ export function TeamBoard() {
     <div className="mx-auto max-w-[1360px] space-y-5 px-4 py-6">
       <header className="flex items-center gap-2">
         <Shield className="h-5 w-5 text-brand-300" />
-        <h1 className="text-lg font-bold text-white">Mercados de times e jogos</h1>
+        <h1 className="font-display text-lg font-bold italic text-white">Mercados de times e jogos</h1>
         <span className="text-sm text-slate-500">· escanteios, gols, 1º tempo, faltas, chutes, cartões…</span>
       </header>
 

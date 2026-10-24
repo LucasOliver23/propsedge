@@ -28,7 +28,7 @@ export function TrendsPage() {
     <div className="mx-auto max-w-[1200px] space-y-5 px-4 py-6">
       <header className="flex flex-wrap items-center gap-2">
         <BarChart3 className="h-5 w-5 text-emerald-300" />
-        <h1 className="text-lg font-bold text-white">Tendências</h1>
+        <h1 className="font-display text-lg font-bold italic text-white">Tendências</h1>
         <span className="text-sm text-slate-500">· over, ambas marcam, escanteios, cartões, 1X2 e tabela</span>
       </header>
       <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">

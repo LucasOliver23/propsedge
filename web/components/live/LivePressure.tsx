@@ -48,7 +48,7 @@ export function LivePressure() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 pt-6">
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-slate-100">
+        <h2 className="font-display mb-3 flex items-center gap-2 text-lg font-bold italic text-slate-100">
           <BellRing className="h-5 w-5 text-amber-300" /> Alertas ao vivo
         </h2>
         {!alerts.length ? (
