@@ -167,8 +167,8 @@ def run() -> None:
 
             goal_proj = None
             for key in markets[sport]:
-                if key == "btts":
-                    continue           # calculado abaixo a partir dos gols projetados
+                if key in ("btts", "handicap"):
+                    continue           # calculados abaixo a partir dos gols projetados (Poisson)
                 lavg = league_avg[sport].get((lg_key, key))
                 subjects = []
                 for subject, team_id, rows, opp_rows, opp_id, at_home in (
@@ -222,6 +222,18 @@ def run() -> None:
                     ms.update({"home_avg": round(lh, 2), "away_avg": round(la, 2), "p_btts": round(pm["btts"], 4),
                                "sd": res["sd"]})
                     rows_out.append((g["id"], "match", "btts", None, res, mu, None, ms))
+
+                # handicap asiático: mercado derivado do próprio modelo de gols (não é stat
+                # contável com histórico comparável — por isso não usa _analyse/score, só a
+                # probabilidade do Poisson). Card do front mostra isso de forma informativa,
+                # sem linha ajustável nem janelas L5/L10 (não fariam sentido aqui).
+                hc_side = "over" if hc["p_home"] >= hc["p_away"] else "under"
+                hc_prob = hc["p_home"] if hc_side == "over" else hc["p_away"]
+                hc_res = {"line": hc["line"], "side": hc_side, "score": round(max(0, min(100, 100 * hc_prob))),
+                          "prob": round(hc_prob, 4), "hit_l10": None, "grade": None}
+                hc_data = {"l20": [], "venue": [], "h2h": [], "season": [],
+                           "home_avg": round(lh, 2), "away_avg": round(la, 2)}
+                rows_out.append((g["id"], "match", "handicap", None, hc_res, hc["line"], None, hc_data))
 
             if g["start_time"] - now < timedelta(hours=24):
                 for (gid, subject, key, team_id, res, *_rest) in [r for r in rows_out if r[0] == g["id"]]:

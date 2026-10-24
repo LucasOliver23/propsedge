@@ -122,6 +122,8 @@ export function TeamBoard() {
               const k = key(r);
               const isMatch = r.subject === "match";
               const yesNo = r.stat_key === "btts";
+              const isHandicap = r.stat_key === "handicap";
+              const hcFavored = Number(r.default_line) > 0 ? r.home_abbr : r.away_abbr;
               return (
                 <li key={k} className="rounded-xl border border-line bg-surface">
                   <button onClick={() => setOpen((o) => (o === k ? null : k))} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02]">
@@ -138,16 +140,28 @@ export function TeamBoard() {
                     </div>
                     <div className="hidden text-right sm:block">
                       <p className="text-sm">
-                        <span className={clsx("mr-1 rounded px-1.5 py-0.5 text-[11px] font-bold uppercase", r.default_side === "over" ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300")}>
-                          {yesNo ? (r.default_side === "over" ? "Sim" : "Não") : r.default_side === "over" ? "Mais" : "Menos"}
-                        </span>
-                        {!yesNo && <><b className="tabular-nums text-white">{Number(r.default_line)}</b>{" "}</>}
-                        <span className="text-slate-300">{r.stat_label}{isMatch && !yesNo ? " (jogo)" : ""}</span>
+                        {isHandicap ? (
+                          <span className="mr-1 rounded bg-brand-500/15 px-1.5 py-0.5 text-[11px] font-bold uppercase text-brand-300">
+                            {hcFavored} -{Math.abs(Number(r.default_line))}
+                          </span>
+                        ) : (
+                          <span className={clsx("mr-1 rounded px-1.5 py-0.5 text-[11px] font-bold uppercase", r.default_side === "over" ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300")}>
+                            {yesNo ? (r.default_side === "over" ? "Sim" : "Não") : r.default_side === "over" ? "Mais" : "Menos"}
+                          </span>
+                        )}
+                        {!yesNo && !isHandicap && <><b className="tabular-nums text-white">{Number(r.default_line)}</b>{" "}</>}
+                        <span className="text-slate-300">{isHandicap ? "Handicap asiático" : r.stat_label}{isMatch && !yesNo && !isHandicap ? " (jogo)" : ""}</span>
                       </p>
                       <p className="text-xs text-slate-500">
-                        L10 {r.hit_l10 != null ? `${Math.round(Number(r.hit_l10) * 100)}%` : "—"} ·{" "}
-                        {yesNo ? <>chance {r.data?.p_btts != null ? `${Math.round(Number(r.data.p_btts) * 100)}%` : "—"}</>
-                          : <>proj. {r.projection != null ? Number(r.projection).toFixed(1) : "—"}</>}
+                        {isHandicap ? (
+                          <>gols esp. {r.data?.home_avg?.toFixed(1) ?? "—"} x {r.data?.away_avg?.toFixed(1) ?? "—"}</>
+                        ) : (
+                          <>
+                            L10 {r.hit_l10 != null ? `${Math.round(Number(r.hit_l10) * 100)}%` : "—"} ·{" "}
+                            {yesNo ? <>chance {r.data?.p_btts != null ? `${Math.round(Number(r.data.p_btts) * 100)}%` : "—"}</>
+                              : <>proj. {r.projection != null ? Number(r.projection).toFixed(1) : "—"}</>}
+                          </>
+                        )}
                         {r.model_prob ? <> · odd justa <b className="text-slate-300">{(1 / Number(r.model_prob)).toFixed(2)}</b></> : null}
                         {r.matchup_grade && <> · matchup <b className="text-slate-300">{r.matchup_grade}</b></>}
                       </p>

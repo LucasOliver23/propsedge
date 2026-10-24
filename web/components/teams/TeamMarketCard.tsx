@@ -32,6 +32,7 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
   const d = row.data;
   const isMatch = row.subject === "match";
   const isYesNo = row.stat_key === "btts";            // Ambas marcam: linha fixa 0.5, Sim/Não
+  const isHandicap = row.stat_key === "handicap";     // mercado derivado do modelo, sem janelas/linha ajustável
   const sideLabel = (s: Side) => (isYesNo ? (s === "over" ? "Sim" : "Não") : s === "over" ? "Mais" : "Menos");
   const step = 1;
   const projection = row.projection != null ? Number(row.projection) : null;
@@ -72,6 +73,53 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
     } finally { setBusy(false); }
+  }
+
+  // Handicap asiático é derivado direto do modelo de gols esperados (Poisson), não de uma
+  // estatística contável com histórico comparável — por isso não tem linha ajustável, janelas
+  // L5/L10/H2H nem "Fixar" (odd de handicap não é a mesma coisa de odd de Mais/Menos de time).
+  // Card informativo, só com a leitura do modelo.
+  if (isHandicap) {
+    const favored = Number(row.default_line) > 0 ? (row.home_abbr ?? row.home_name) : (row.away_abbr ?? row.away_name);
+    const fair = row.model_prob ? (1 / Number(row.model_prob)).toFixed(2) : "—";
+    return (
+      <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+        <div className="flex flex-wrap items-start gap-4 border-b border-line bg-gradient-to-r from-elevated to-surface p-4">
+          <div className="flex items-center gap-2">
+            <TeamLogo src={row.home_logo} alt={row.home_name} size={56} />
+            <TeamLogo src={row.away_logo} alt={row.away_name} size={44} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-xl font-black text-white">{row.home_name} x {row.away_name}</h3>
+            <p className="text-xs text-slate-400">🕒 {kickoff(row.start_time)} · {leagueName(row.league_slug)}</p>
+          </div>
+        </div>
+        <div className="space-y-3 p-5 text-sm text-slate-300">
+          <p>
+            Handicap asiático:{" "}
+            <b className="text-white">{favored} -{Math.abs(Number(row.default_line))}</b>
+            {" "}— a linha em que o modelo considera o confronto ~50/50.
+          </p>
+          {d.home_avg != null && d.away_avg != null && (
+            <p className="text-slate-400">
+              Gols esperados: {row.home_abbr ?? row.home_name} <b className="text-slate-200">{Number(d.home_avg).toFixed(2)}</b> x{" "}
+              <b className="text-slate-200">{Number(d.away_avg).toFixed(2)}</b> {row.away_abbr ?? row.away_name}
+            </p>
+          )}
+          <div className="flex items-center gap-6 pt-1">
+            <div>
+              <p className="text-[11px] font-display uppercase tracking-wide text-slate-500">Chance de cobrir</p>
+              <p className="text-2xl font-bold tabular-nums text-emerald-300">{row.model_prob ? `${Math.round(Number(row.model_prob) * 100)}%` : "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-display uppercase tracking-wide text-slate-500">Odd justa</p>
+              <p className="text-2xl font-bold tabular-nums text-slate-100">{fair}</p>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">Calculado a partir dos gols esperados de cada time (modelo de Poisson) — compare com a odd de handicap da sua casa antes de entrar.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
