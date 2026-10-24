@@ -108,6 +108,15 @@ def score(series: dict[str, Sequence[float]], line: float, side: str, projection
     consistency = max(0.4, min(1.0, 1 - 2 * pstdev(comps.values()))) if len(comps) > 1 else 0.6
     r = 0.5 + 0.5 * sample * consistency
     sc = round(max(0, min(100, 100 * (0.5 + (p - 0.5) * r))))
+    # Mercado "morto": quando quase todo jogo do histórico deu o MESMO valor (tipo
+    # cartão vermelho, que é 0 em ~90% dos jogos pra qualquer time), o hit rate alto
+    # não é um padrão do time — é só a raridade natural do evento, igual pra todo
+    # mundo. Sem isso, esses mercados ficavam artificialmente no topo do ranking
+    # (score 80-90+) só por terem variância ~0, sem trazer nenhuma análise real.
+    if len(l20) >= 5:
+        mode_share = max(l20.count(v) for v in set(l20)) / len(l20)
+        if mode_share >= 0.85:
+            sc = min(sc, 55)
     return int(sc), round(p, 4), {k: round(v, 4) for k, v in comps.items()}
 
 

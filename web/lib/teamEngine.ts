@@ -82,7 +82,17 @@ export function teamScore(data: TeamSeries, line: number, side: Side, projection
   const sample = Math.min(1, l20.length / 15);
   const consistency = keys.length > 1 ? Math.max(0.4, Math.min(1, 1 - 2 * pstdev(Object.values(comps)))) : 0.6;
   const r = 0.5 + 0.5 * sample * consistency;
-  return { score: Math.round(Math.max(0, Math.min(100, 100 * (0.5 + (p - 0.5) * r)))), prob: p };
+  let sc = Math.round(Math.max(0, Math.min(100, 100 * (0.5 + (p - 0.5) * r))));
+  // Mesmo ajuste do score.py: mercado "morto" (quase todo jogo com o mesmo valor,
+  // tipo cartão vermelho = 0 quase sempre) não é um padrão real do time, é só a
+  // raridade do evento — não deixa o score subir artificialmente.
+  if (l20.length >= 5) {
+    const counts = new Map<number, number>();
+    for (const v of l20) counts.set(v, (counts.get(v) ?? 0) + 1);
+    const modeShare = Math.max(...counts.values()) / l20.length;
+    if (modeShare >= 0.85) sc = Math.min(sc, 55);
+  }
+  return { score: sc, prob: p };
 }
 
 export const ev = (prob: number, odd: number) => prob * odd - 1;
