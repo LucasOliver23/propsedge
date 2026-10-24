@@ -111,7 +111,7 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
       {/* Números principais */}
       <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-4">
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">{isYesNo ? "Chance de ambas" : "Projeção"}</p>
+          <p className="text-[11px] font-display uppercase tracking-wide text-slate-500">{isYesNo ? "Chance de ambas" : "Projeção"}</p>
           <p className="text-2xl font-bold tabular-nums text-emerald-300">
             {isYesNo ? (d.p_btts != null ? `${Math.round(Number(d.p_btts) * 100)}%` : "—") : projection?.toFixed(1) ?? "—"}
           </p>
@@ -120,7 +120,7 @@ export function TeamMarketCard({ row, defaultStake, onPin }: Props) {
           )}
         </div>
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">Bateu</p>
+          <p className="text-[11px] font-display uppercase tracking-wide text-slate-500">Bateu</p>
           <p className={clsx("text-2xl font-bold tabular-nums", (hr.rate ?? 0) >= 0.6 ? "text-emerald-300" : (hr.rate ?? 0) >= 0.45 ? "text-amber-300" : "text-rose-400")}>
             {hr.rate == null ? "—" : `${Math.round(hr.rate * 100)}%`}
           </p>

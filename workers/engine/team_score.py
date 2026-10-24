@@ -150,3 +150,32 @@ def btts_mu(p_btts: float) -> float:
     Assim o mesmo motor (e o recálculo no site) funciona com linha fixa 0.5."""
     p = min(max(p_btts, 0.01), 0.99)
     return -math.log(1 - p)
+
+
+def handicap(lam_home: float, lam_away: float, max_goals: int = 10) -> dict[str, float]:
+    """Handicap asiático (linha em .5, sem empate possível) a partir dos mesmos gols
+    esperados do 1X2/over: pega a linha mais perto de 50/50 (igual ao 'book_line' dos
+    mercados de time) e devolve P(casa cobre) / P(fora cobre) pra ela.
+    Convenção: handicap_line é o número de gols que o mandante PRECISA tirar de
+    vantagem — positivo = mandante favorito (ex.: 1.5 = "casa -1.5")."""
+    lh, la = max(lam_home, 0.01), max(lam_away, 0.01)
+    ph = [_pois_pmf(k, lh) for k in range(max_goals + 1)]
+    pa = [_pois_pmf(k, la) for k in range(max_goals + 1)]
+
+    def p_home_covers(line: float) -> float:
+        # casa cobre quando (gols_casa - gols_fora) > line
+        total = 0.0
+        for i, x in enumerate(ph):
+            for j, y in enumerate(pa):
+                if (i - j) > line:
+                    total += x * y
+        return total
+
+    best_line, best_gap, best_p = 0.5, 9.0, 0.5
+    for k in range(-max_goals, max_goals):
+        line = k + 0.5
+        p = p_home_covers(line)
+        gap = abs(p - 0.5)
+        if gap < best_gap:
+            best_line, best_gap, best_p = line, gap, p
+    return {"line": best_line, "p_home": best_p, "p_away": 1 - best_p}

@@ -79,12 +79,12 @@ export function RoundRecap() {
       <div className="grid gap-5 md:grid-cols-[280px_1fr]">
         <div className="space-y-4">
           <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 to-surface p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-300">Mercados que</p>
+            <p className="text-xs font-semibold font-display uppercase tracking-widest text-emerald-300">Mercados que</p>
             <p className="text-4xl font-black leading-none text-white">se <span className="text-emerald-400">destacaram</span></p>
             <p className="mt-3 text-sm text-slate-400">Picks automáticos do PropsEdge (score ≥ 65), conferidos com o resultado oficial.</p>
           </div>
           <div className="rounded-2xl border border-line bg-surface p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Overall da rodada</p>
+            <p className="text-xs font-semibold font-display uppercase tracking-wide text-slate-400">Overall da rodada</p>
             <div className="mt-3 grid grid-cols-4 text-center">
               <Stat label="Entradas" value={total} />
               <Stat label="Green" value={greens} tone="text-emerald-400" />
@@ -95,7 +95,7 @@ export function RoundRecap() {
         </div>
 
         <div className="rounded-2xl border border-line bg-surface">
-          <div className="grid grid-cols-[1fr_90px_140px] border-b border-line px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className="grid grid-cols-[1fr_90px_140px] border-b border-line px-4 py-2 text-[11px] font-semibold font-display uppercase tracking-wide text-slate-500">
             <span>Mercado</span><span className="text-center">Entradas</span><span>Hit rate</span>
           </div>
           <ul>

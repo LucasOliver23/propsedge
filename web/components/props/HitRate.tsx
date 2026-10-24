@@ -7,7 +7,7 @@ export function HitRate({ label, hits, n }: { label: string; hits: number | null
     r == null ? "text-slate-500" : r >= 0.7 ? "text-emerald-300" : r >= 0.5 ? "text-slate-200" : "text-rose-300";
   return (
     <div className="flex flex-col items-center leading-tight">
-      <span className="text-[10px] uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-[10px] font-display uppercase tracking-wide text-slate-500">{label}</span>
       <span className={clsx("font-display text-sm font-semibold tabular-nums", tone)}>
         {r == null ? "—" : `${Math.round(r * 100)}%`}
       </span>

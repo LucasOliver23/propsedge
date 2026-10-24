@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 // contraste deliberado com a Inter do corpo/UI.
 const grotesk = Archivo({
   subsets: ["latin"],
-  weight: ["700", "800", "900"],
+  weight: ["600", "700", "800", "900"],
   style: ["normal", "italic"],
   variable: "--font-grotesk",
 });

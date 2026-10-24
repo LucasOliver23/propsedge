@@ -94,7 +94,7 @@ export function LiveTracker() {
 
       {!!recent.length && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Liquidadas recentemente</h2>
+          <h2 className="mb-3 text-sm font-semibold font-display uppercase tracking-wide text-slate-400">Liquidadas recentemente</h2>
           <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
             {recent.map((b) => (
               <li key={b.id} className="flex items-center justify-between px-4 py-3 text-sm">

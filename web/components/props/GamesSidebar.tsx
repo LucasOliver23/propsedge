@@ -43,7 +43,7 @@ export function GamesSidebar({
   return (
     <aside className="flex max-h-[calc(100vh-7rem)] flex-col rounded-xl border border-line bg-surface lg:sticky lg:top-4">
       <div className="flex items-center justify-between border-b border-line px-3.5 py-3">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-slate-300">Jogos</h2>
+        <h2 className="text-xs font-bold font-display uppercase tracking-wide text-slate-300">Jogos</h2>
         {selected.size > 0 && (
           <button onClick={onClear} className="text-[11px] text-slate-500 underline hover:text-slate-300">
             limpar
@@ -53,7 +53,7 @@ export function GamesSidebar({
       <div className="flex-1 overflow-y-auto px-2 py-2">
         {Array.from(groups.entries()).map(([dateKey, list]) => (
           <div key={dateKey} className="mb-2">
-            <p className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            <p className="px-2 py-1 text-[11px] font-semibold font-display uppercase tracking-wide text-slate-500">
               {dayLabel(dateKey)}
             </p>
             <ul className="space-y-1">

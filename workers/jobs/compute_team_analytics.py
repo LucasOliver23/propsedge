@@ -15,7 +15,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 from db import connect
-from engine.team_score import book_line, btts_mu, ewma, grade, poisson_match, rate, score, stdev
+from engine.team_score import book_line, btts_mu, ewma, grade, handicap, poisson_match, rate, score, stdev
 from jobs.common import log
 
 PICK_MIN_SCORE = 65
@@ -210,9 +210,10 @@ def run() -> None:
             if sport == "soccer" and goal_proj:
                 lh, la = goal_proj
                 pm = poisson_match(lh, la)
+                hc = handicap(lh, la)
                 preds.append((g["id"], sport, round(lh, 3), round(la, 3), round(pm["home"], 4), round(pm["draw"], 4),
                                round(pm["away"], 4), round(pm["over15"], 4), round(pm["over25"], 4),
-                               round(pm["btts"], 4)))
+                               round(pm["btts"], 4), hc["line"], round(hc["p_home"], 4), round(hc["p_away"], 4)))
                 ms = _match_series(rows_h, rows_a, "goals", g["away_team_id"], g["home_abbr"] or "CASA",
                                    g["away_abbr"] or "FORA", combine=lambda a, b: float(a > 0 and b > 0))
                 mu = btts_mu(pm["btts"])
@@ -244,12 +245,15 @@ def run() -> None:
         if preds:
             cur.executemany(
                 """insert into game_predictions (game_id, sport_id, lambda_home, lambda_away, p_home, p_draw, p_away,
-                                                 p_over15, p_over25, p_btts, computed_at)
-                   values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, now())
+                                                 p_over15, p_over25, p_btts, handicap_line, p_handicap_home,
+                                                 p_handicap_away, computed_at)
+                   values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, now())
                    on conflict (game_id) do update set
                      lambda_home=excluded.lambda_home, lambda_away=excluded.lambda_away, p_home=excluded.p_home,
                      p_draw=excluded.p_draw, p_away=excluded.p_away, p_over15=excluded.p_over15,
-                     p_over25=excluded.p_over25, p_btts=excluded.p_btts, computed_at=now()""",
+                     p_over25=excluded.p_over25, p_btts=excluded.p_btts, handicap_line=excluded.handicap_line,
+                     p_handicap_home=excluded.p_handicap_home, p_handicap_away=excluded.p_handicap_away,
+                     computed_at=now()""",
                 preds,
             )
         if picks:

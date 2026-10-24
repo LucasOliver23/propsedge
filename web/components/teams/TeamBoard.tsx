@@ -206,7 +206,7 @@ function TeamFiltersSidebar(props: {
 }) {
   return (
     <aside className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-3.5 lg:sticky lg:top-4 lg:self-start">
-      <h2 className="text-xs font-bold uppercase tracking-wide text-slate-300">Filtros</h2>
+      <h2 className="text-xs font-bold font-display uppercase tracking-wide text-slate-300">Filtros</h2>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -280,7 +280,7 @@ function Section({ title, defaultOpen, children }: { title: string; defaultOpen?
     <div className="border-t border-line pt-3">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between text-xs font-bold uppercase tracking-wide text-slate-300"
+        className="flex w-full items-center justify-between text-xs font-bold font-display uppercase tracking-wide text-slate-300"
       >
         {title}
         <ChevronDown className={clsx("h-3.5 w-3.5 text-slate-500 transition", open && "rotate-180")} />

@@ -202,6 +202,7 @@ export interface GamePrediction {
   game_id: number; sport_id: SportId; start_time: string; game_status: GameStatus; league_slug: string | null;
   lambda_home: number; lambda_away: number; p_home: number; p_draw: number; p_away: number;
   p_over15: number; p_over25: number; p_btts: number;
+  handicap_line: number | null; p_handicap_home: number | null; p_handicap_away: number | null;
   home_team_id: number; home_name: string; home_abbr: string | null; home_logo: string | null;
   away_team_id: number; away_name: string; away_abbr: string | null; away_logo: string | null;
   home_rank: number | null; away_rank: number | null;

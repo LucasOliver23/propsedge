@@ -66,7 +66,7 @@ function Group({ title, score, children }: { title: string; score: number | null
   return (
     <div className="space-y-2 rounded-lg border border-line/60 bg-bg/30 p-3">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{title}</p>
+        <p className="text-[11px] font-semibold font-display uppercase tracking-wide text-slate-400">{title}</p>
         {score != null && (
           <span className={clsx("font-display text-xs font-bold tabular-nums", barTone(score).text)}>{Math.round(score * 100)}%</span>
         )}

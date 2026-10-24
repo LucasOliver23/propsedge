@@ -319,7 +319,7 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
 
           {/* Tabela */}
           <section className="overflow-visible rounded-xl border border-line bg-surface">
-            <div className={clsx(GRID, "hidden border-b border-line px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 md:grid")}>
+            <div className={clsx(GRID, "hidden border-b border-line px-4 py-2 text-[11px] font-semibold font-display uppercase tracking-wide text-slate-500 md:grid")}>
               <span>Jogador</span>
               <span>Prop</span>
               <span className="text-center">L5</span>
@@ -424,7 +424,7 @@ function Kpi({
 }) {
   return (
     <div className={clsx("bg-surface p-4", highlight && "shadow-[inset_0_0_0_1px_rgba(34,224,114,0.35)]")}>
-      <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+      <p className="flex items-center gap-1.5 text-[11px] font-semibold font-display uppercase tracking-wide text-slate-500">
         {icon}
         {label}
       </p>

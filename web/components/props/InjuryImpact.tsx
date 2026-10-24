@@ -34,14 +34,14 @@ function Column({ title, injuries }: { title: string; injuries: TeammateInjury[]
   if (!injuries || injuries.length === 0) {
     return (
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+        <p className="text-[11px] font-semibold font-display uppercase tracking-wide text-slate-500">{title}</p>
         <p className="mt-1.5 text-xs text-slate-600">Sem desfalques relevantes</p>
       </div>
     );
   }
   return (
     <div className="min-w-0 flex-1">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+      <p className="text-[11px] font-semibold font-display uppercase tracking-wide text-slate-500">{title}</p>
       <ul className="mt-1.5 space-y-1">
         {injuries.slice(0, 5).map((inj) => (
           <InjuryRow key={inj.name} inj={inj} />

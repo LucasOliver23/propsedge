@@ -148,6 +148,12 @@ function GamesTab() {
                 <span className="flex items-center justify-center bg-slate-500/30 text-slate-100" style={{ width: `${pd * 100}%` }}>X · {Math.round(pd * 100)}%</span>
                 <span className="flex items-center justify-center bg-brand-500/30 text-brand-100" style={{ width: `${pa * 100}%` }}>2 · {Math.round(pa * 100)}%</span>
               </div>
+              {g.handicap_line != null && (
+                <p className="mt-2 text-xs text-slate-400">
+                  Handicap asiático: <b className="text-slate-200">{g.handicap_line > 0 ? g.home_abbr : g.away_abbr} {g.handicap_line > 0 ? `-${g.handicap_line}` : `-${Math.abs(g.handicap_line)}`}</b>{" "}
+                  · {g.home_abbr} <b className="text-slate-300">{fair(n(g.p_handicap_home))}</b> · {g.away_abbr} <b className="text-slate-300">{fair(n(g.p_handicap_away))}</b>
+                </p>
+              )}
               <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
                 {([["Over 1.5", g.p_over15], ["Over 2.5", g.p_over25], ["Ambas marcam", g.p_btts]] as [string, number][]).map(([l, p]) => (
                   <div key={l} className="rounded-lg bg-bg/60 py-2">
@@ -189,7 +195,7 @@ function LeaguesTab() {
       {!!list.length && (
         <div className="overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[980px] text-sm">
-            <thead className="text-[11px] uppercase tracking-wide text-slate-500">
+            <thead className="text-[11px] font-display uppercase tracking-wide text-slate-500">
               <tr className="border-b border-line">
                 <th className="sticky left-0 bg-surface px-3 py-2 text-left">Liga</th>
                 {LEAGUE_COLS.map((c) => (
@@ -251,7 +257,7 @@ function TeamsTab() {
       {!!list.length && (
         <div className="overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[1080px] text-sm">
-            <thead className="text-[11px] uppercase tracking-wide text-slate-500">
+            <thead className="text-[11px] font-display uppercase tracking-wide text-slate-500">
               <tr className="border-b border-line">
                 <th className="sticky left-0 bg-surface px-3 py-2 text-left">Time</th>
                 <th className="px-2 py-2 text-center">Forma</th>
@@ -306,7 +312,7 @@ function StandingsTab() {
       <Status loading={loading} error={error} empty={!groups.length} text="A classificação é atualizada junto com a agenda (a cada 3h)." />
       {groups.map(([g, list]) => (
         <div key={g} className="overflow-x-auto rounded-xl border border-line bg-surface">
-          {g && <p className="border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{g}</p>}
+          {g && <p className="border-b border-line px-3 py-2 text-xs font-semibold font-display uppercase tracking-wide text-slate-400">{g}</p>}
           <table className="w-full min-w-[560px] text-sm">
             <thead className="text-[11px] uppercase text-slate-500">
               <tr className="border-b border-line">

@@ -33,7 +33,7 @@ export function FiltersSidebar(props: {
   return (
     <aside className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-3.5 lg:sticky lg:top-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-slate-300">Filtros</h2>
+        <h2 className="text-xs font-bold font-display uppercase tracking-wide text-slate-300">Filtros</h2>
         <button
           onClick={props.onReload}
           className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200"
@@ -125,7 +125,7 @@ function Section({ title, defaultOpen, children }: { title: string; defaultOpen?
     <div className="border-t border-line pt-3">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between text-xs font-bold uppercase tracking-wide text-slate-300"
+        className="flex w-full items-center justify-between text-xs font-bold font-display uppercase tracking-wide text-slate-300"
       >
         {title}
         <ChevronDown className={clsx("h-3.5 w-3.5 text-slate-500 transition", open && "rotate-180")} />

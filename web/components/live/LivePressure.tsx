@@ -81,7 +81,7 @@ export function LivePressure() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Futebol ao vivo · pressão</h2>
+        <h2 className="mb-3 text-sm font-semibold font-display uppercase tracking-wide text-slate-400">Futebol ao vivo · pressão</h2>
         {!games.length ? (
           <p className="rounded-xl border border-line bg-surface p-5 text-sm text-slate-400">Nenhum jogo de futebol em andamento agora.</p>
         ) : (
