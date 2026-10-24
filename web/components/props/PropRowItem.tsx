@@ -66,8 +66,11 @@ function PropRowItemBase({ row, expanded, pinned, defaultStake, onToggle, onPin,
               {row.confirmed_starter && <span className="ml-1 rounded bg-emerald-500/15 px-1 text-[10px] font-bold text-emerald-300" title="Titular confirmado / arremessador provável">TIT{row.batting_order ? ` ${row.batting_order}º` : ""}</span>}
               {inj && <span className="ml-1 rounded bg-amber-500/15 px-1 text-[10px] font-bold text-amber-300" title={row.injury_detail ?? inj}>{inj}</span>}
             </p>
-            <p className="truncate text-xs text-slate-400">
-              {row.position ?? ""} · {row.team_abbr} {row.is_home ? "vs" : "@"} {row.opp_abbr} · {kickoff(row.start_time)}
+            <p
+              className="truncate text-xs text-slate-400"
+              title={`${row.team_name ?? row.team_abbr ?? ""} ${row.is_home ? "vs" : "@"} ${row.opp_name ?? row.opp_abbr ?? ""}`}
+            >
+              {row.position ?? ""} · {row.team_name ?? row.team_abbr} {row.is_home ? "vs" : "@"} {row.opp_name ?? row.opp_abbr} · {kickoff(row.start_time)}
             </p>
           </div>
         </div>

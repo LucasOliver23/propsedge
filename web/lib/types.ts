@@ -29,6 +29,8 @@ export interface PropRow {
   player_status: string;
   team_abbr: string | null;
   opp_abbr: string | null;
+  team_name: string | null;
+  opp_name: string | null;
   is_home: boolean;
   l5_hits: number | null;  l5_n: number | null;
   l10_hits: number | null; l10_n: number | null;

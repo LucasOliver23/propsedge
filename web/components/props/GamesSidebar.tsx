@@ -77,8 +77,10 @@ export function GamesSidebar({
                         {active && <span className="h-1.5 w-1.5 rounded-sm bg-black" />}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1.5 font-semibold text-slate-100">
-                          {g.home} <span className="text-slate-500">vs</span> {g.away}
+                        <span className="flex min-w-0 items-center gap-1.5 font-semibold text-slate-100" title={`${g.home} vs ${g.away}`}>
+                          <span className="truncate">{g.home}</span>
+                          <span className="shrink-0 text-slate-500">vs</span>
+                          <span className="truncate">{g.away}</span>
                           {g.live && (
                             <span className="flex items-center gap-1 rounded bg-rose-500/15 px-1 py-0.5 text-[9px] font-bold uppercase text-rose-300 shadow-[0_0_8px_0_rgba(244,63,94,0.5)]">
                               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />

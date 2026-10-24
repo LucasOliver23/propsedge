@@ -107,8 +107,9 @@ export function PropsDashboard({ initialRows = [] }: { initialRows?: PropRow[] }
     for (const r of base) {
       if (sport !== "all" && r.sport_id !== sport) continue;
       if (m.has(r.game_id)) continue;
-      const home = r.is_home ? r.team_abbr : r.opp_abbr;
-      const away = r.is_home ? r.opp_abbr : r.team_abbr;
+      // Nome completo (não só a sigla de 3 letras) pra dar pra identificar o time de cara.
+      const home = r.is_home ? (r.team_name ?? r.team_abbr) : (r.opp_name ?? r.opp_abbr);
+      const away = r.is_home ? (r.opp_name ?? r.opp_abbr) : (r.team_name ?? r.team_abbr);
       m.set(r.game_id, {
         id: r.game_id,
         home: home ?? "?",
